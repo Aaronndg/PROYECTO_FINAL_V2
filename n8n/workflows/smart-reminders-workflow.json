@@ -1,0 +1,351 @@
+{
+  "name": "SerenIA - Análisis de Patrones Emocionales",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mood-analysis",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Trigger de Estado de Ánimo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "mood-analysis-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analizar datos de estado de ánimo\nconst moodData = $input.first().json;\nconst userId = moodData.userId;\nconst moodLevel = moodData.moodLevel;\nconst timestamp = moodData.timestamp;\n\n// Obtener historial de estados de ánimo (simulado)\nconst moodHistory = [\n  { date: '2024-01-01', mood: 4 },\n  { date: '2024-01-02', mood: 3 },\n  { date: '2024-01-03', mood: moodLevel }\n];\n\n// Calcular tendencia\nconst calculateTrend = (history) => {\n  if (history.length < 2) return 'insufficient_data';\n  \n  const recent = history.slice(-3);\n  const avg = recent.reduce((sum, item) => sum + item.mood, 0) / recent.length;\n  const previousAvg = history.slice(-6, -3).reduce((sum, item) => sum + item.mood, 0) / 3;\n  \n  if (avg > previousAvg + 0.5) return 'improving';\n  if (avg < previousAvg - 0.5) return 'declining';\n  return 'stable';\n};\n\n// Detectar patrones preocupantes\nconst detectConcerns = (level, history) => {\n  const concerns = [];\n  \n  if (level <= 2) concerns.push('low_mood');\n  \n  const recentLow = history.slice(-3).filter(item => item.mood <= 2);\n  if (recentLow.length >= 2) concerns.push('prolonged_low_mood');\n  \n  return concerns;\n};\n\nconst trend = calculateTrend(moodHistory);\nconst concerns = detectConcerns(moodLevel, moodHistory);\nconst needsIntervention = concerns.length > 0;\n\nreturn {\n  userId,\n  moodLevel,\n  timestamp,\n  analysis: {\n    trend,\n    concerns,\n    needsIntervention,\n    confidence: Math.random() * 30 + 70, // 70-100%\n    recommendation: needsIntervention ? 'immediate_support' : 'continue_monitoring'\n  },\n  triggerNotification: needsIntervention,\n  moodHistory\n};"
+      },
+      "id": "analyze-mood",
+      "name": "Analizar Patrones de Estado de Ánimo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "intervention-needed",
+              "leftValue": "={{ $json.analysis.needsIntervention }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-intervention",
+      "name": "¿Necesita Intervención?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generar recomendaciones personalizadas\nconst data = $input.first().json;\nconst moodLevel = data.moodLevel;\nconst concerns = data.analysis.concerns;\n\nconst generateRecommendations = (level, concerns) => {\n  const recommendations = [];\n  \n  if (level <= 2) {\n    recommendations.push({\n      type: 'immediate',\n      action: 'prayer_moment',\n      content: 'Toma un momento para orar y entregar tus cargas a Dios',\n      verse: 'Filipenses 4:6-7'\n    });\n    \n    recommendations.push({\n      type: 'content',\n      action: 'encouraging_verse',\n      content: 'Versículo personalizado de aliento',\n      priority: 'high'\n    });\n  }\n  \n  if (concerns.includes('prolonged_low_mood')) {\n    recommendations.push({\n      type: 'intervention',\n      action: 'support_resources',\n      content: 'Recursos de apoyo y contactos de ayuda',\n      priority: 'urgent'\n    });\n    \n    recommendations.push({\n      type: 'notification',\n      action: 'telegram_check_in',\n      content: 'Check-in personal vía Telegram',\n      schedule: 'within_2_hours'\n    });\n  }\n  \n  if (level >= 4) {\n    recommendations.push({\n      type: 'reinforcement',\n      action: 'gratitude_prompt',\n      content: 'Momento de gratitud y reflexión positiva',\n      priority: 'medium'\n    });\n  }\n  \n  return recommendations;\n};\n\nconst recommendations = generateRecommendations(moodLevel, concerns);\n\nreturn {\n  ...data,\n  recommendations,\n  interventionPlan: {\n    immediate: recommendations.filter(r => r.priority === 'urgent' || r.priority === 'high'),\n    followUp: recommendations.filter(r => r.priority === 'medium'),\n    monitoring: {\n      frequency: concerns.length > 0 ? 'daily' : 'weekly',\n      duration: concerns.length > 0 ? '7_days' : '30_days'\n    }\n  }\n};"
+      },
+      "id": "generate-recommendations",
+      "name": "Generar Recomendaciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi",
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.userId }}",
+        "text": "🙏 Hola hermano/a, he notado que tu estado de ánimo ha estado bajo últimamente. Recuerda que Dios está contigo en cada momento.\n\n*\"Cercano está Jehová a los quebrantados de corazón; y salva a los contritos de espíritu.\"* - Salmos 34:18\n\n¿Te gustaría hacer una oración juntos o hablar sobre lo que sientes?",
+        "additionalFields": {
+          "parseMode": "Markdown",
+          "replyMarkup": {\n            \"inline_keyboard\": [\n              [\n                { \"text\": \"🙏 Orar juntos\", \"callback_data\": \"prayer_moment\" },\n                { \"text\": \"💬 Hablar\", \"callback_data\": \"talk_now\" }\n              ],\n              [\n                { \"text\": \"📖 Versículo alentador\", \"callback_data\": \"encouraging_verse\" },\n                { \"text\": \"📞 Recursos de apoyo\", \"callback_data\": \"support_resources\" }\n              ]\n            ]\n          }\n        }\n      },\n      \"id\": \"send-telegram-support\",\n      \"name\": \"Enviar Mensaje de Apoyo - Telegram\",\n      \"type\": \"n8n-nodes-base.telegram\",\n      \"typeVersion\": 1.1,\n      \"position\": [900, 400]\n    },\n    {\n      \"parameters\": {\n        \"url\": \"={{ $env.SERENIA_API_URL }}/api/automation/insights\",\n        \"authentication\": \"predefinedCredentialType\",\n        \"nodeCredentialType\": \"sereniaApi\",\n        \"sendHeaders\": true,\n        \"headerParameters\": {\n          \"parameters\": [\n            {\n              \"name\": \"Content-Type\",\n              \"value\": \"application/json\"\n            }\n          ]\n        },\n        \"sendBody\": true,\n        \"bodyParameters\": {\n          \"parameters\": [\n            {\n              \"name\": \"type\",\n              \"value\": \"pattern\"\n            },\n            {\n              \"name\": \"userId\",\n              \"value\": \"={{ $json.userId }}\"\n            },\n            {\n              \"name\": \"title\",\n              \"value\": \"Patrón Emocional Detectado\"\n            },\n            {\n              \"name\": \"description\",\n              \"value\": \"Se analizó tu estado de ánimo y se generaron recomendaciones personalizadas\"\n            },\n            {\n              \"name\": \"severity\",\n              \"value\": \"={{ $json.analysis.needsIntervention ? 'medium' : 'low' }}\"\n            },\n            {\n              \"name\": \"data\",\n              \"value\": \"={{ $json.analysis }}\"\n            }\n          ]\n        }\n      },\n      \"id\": \"save-insight\",\n      \"name\": \"Guardar Insight en SerenIA\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 4.2,\n      \"position\": [1120, 300]\n    },\n    {\n      \"parameters\": {\n        \"url\": \"={{ $env.SERENIA_API_URL }}/api/verses/personalized\",\n        \"authentication\": \"predefinedCredentialType\",\n        \"nodeCredentialType\": \"sereniaApi\",\n        \"sendQuery\": true,\n        \"queryParameters\": {\n          \"parameters\": [\n            {\n              \"name\": \"userId\",\n              \"value\": \"={{ $json.userId }}\"\n            },\n            {\n              \"name\": \"category\",\n              \"value\": \"encouragement\"\n            },\n            {\n              \"name\": \"moodLevel\",\n              \"value\": \"={{ $json.moodLevel }}\"\n            }\n          ]\n        }\n      },\n      \"id\": \"get-verse\",\n      \"name\": \"Obtener Versículo Personalizado\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 4.2,\n      \"position\": [680, 500]\n    },\n    {\n      \"parameters\": {\n        \"mode\": \"combine\",\n        \"combineBy\": \"combineByPosition\",\n        \"options\": {}\n      },\n      \"id\": \"merge-data\",\n      \"name\": \"Combinar Datos\",\n      \"type\": \"n8n-nodes-base.merge\",\n      \"typeVersion\": 2.1,\n      \"position\": [1340, 300]\n    },\n    {\n      \"parameters\": {\n        \"respondWith\": \"json\",\n        \"responseBody\": \"={{ { success: true, analysis: $json.analysis, recommendations: $json.recommendations, insightCreated: true } }}\"\n      },\n      \"id\": \"webhook-response\",\n      \"name\": \"Respuesta del Webhook\",\n      \"type\": \"n8n-nodes-base.respondToWebhook\",\n      \"typeVersion\": 1.1,\n      \"position\": [1560, 300]\n    }\n  ],\n  \"connections\": {\n    \"webhook-trigger\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"analyze-mood\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"analyze-mood\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"check-intervention\",\n            \"type\": \"main\",\n            \"index\": 0\n          },\n          {\n            \"node\": \"get-verse\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"check-intervention\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"generate-recommendations\",\n            \"type\": \"main\",\n            \"index\": 0\n          },\n          {\n            \"node\": \"send-telegram-support\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    },\n    \"generate-recommendations\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"save-insight\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"send-telegram-support\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"merge-data\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"save-insight\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"merge-data\",\n            \"type\": \"main\",\n            \"index\": 1\n          }\n        ]\n      ]\n    },\n    \"get-verse\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"merge-data\",\n            \"type\": \"main\",\n            \"index\": 2\n          }\n        ]\n      ]\n    },\n    \"merge-data\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"webhook-response\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"active\": true,\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  },\n  \"versionId\": \"1\",\n  \"meta\": {\n    \"templateCredsSetupCompleted\": true,\n    \"instanceId\": \"serenia-mood-analysis\"\n  },\n  \"id\": \"mood-analysis-workflow\",\n  \"tags\": [\n    {\n      \"createdAt\": \"2024-01-15T10:00:00.000Z\",\n      \"updatedAt\": \"2024-01-15T10:00:00.000Z\",\n      \"id\": \"serenia-workflows\",\n      \"name\": \"SerenIA Workflows\"\n    }\n  ]\n}"
+      },\n      \"filePath\": \"C:\\Users\\diaz8\\PROYECTO_FINAL_DW1\\n8n\\workflows\\mood-analysis-workflow.json\"\n    },\n    {\n      \"invoke\": \"create_file\",\n      \"parameters\": {\n        \"content\": \"{\n  \\\"name\\\": \\\"SerenIA - Recordatorios Inteligentes\\\",\n  \\\"nodes\\\": [\n    {\n      \\\"parameters\\\": {\n        \\\"rule\\\": {\n          \\\"interval\\\": [\n            {\n              \\\"field\\\": \\\"cronExpression\\\",\n              \\\"expression\\\": \\\"0 8 * * *\\\"\n            }\n          ]\n        }\n      },\n      \\\"id\\\": \\\"schedule-trigger\\\",\n      \\\"name\\\": \\\"Programador - Recordatorios Diarios\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.cron\\\",\n      \\\"typeVersion\\\": 1,\n      \\\"position\\\": [240, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"url\\\": \\\"={{ $env.SERENIA_API_URL }}/api/users/active\\\",\n        \\\"authentication\\\": \\\"predefinedCredentialType\\\",\n        \\\"nodeCredentialType\\\": \\\"sereniaApi\\\"\n      },\n      \\\"id\\\": \\\"get-active-users\\\",\n      \\\"name\\\": \\\"Obtener Usuarios Activos\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.httpRequest\\\",\n      \\\"typeVersion\\\": 4.2,\n      \\\"position\\\": [460, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"jsCode\\\": \\\"// Personalizar recordatorios por usuario\\nconst users = $input.first().json.users;\\nconst currentHour = new Date().getHours();\\nconst personalizedReminders = [];\\n\\nfor (const user of users) {\\n  const userTimezone = user.timezone || 'America/Mexico_City';\\n  const userLocalTime = new Date().toLocaleString('en-US', { timeZone: userTimezone });\\n  const userHour = new Date(userLocalTime).getHours();\\n  \\n  // Determinar el tipo de recordatorio óptimo\\n  let reminderType = 'verse';\\n  if (user.lastMoodLevel <= 2) reminderType = 'encouragement';\\n  if (user.preferredReminderType) reminderType = user.preferredReminderType;\\n  \\n  // Personalizar contenido basado en el historial del usuario\\n  const personalization = {\\n    name: user.firstName || 'hermano/a',\\n    lastActivity: user.lastActivity,\\n    moodTrend: user.moodTrend || 'stable',\\n    preferredContent: user.preferredContent || 'verses'\\n  };\\n  \\n  // Verificar si es el momento óptimo para este usuario\\n  const optimalTime = user.reminderSettings?.optimalTime || 8;\\n  const timeWindow = Math.abs(userHour - optimalTime);\\n  \\n  if (timeWindow <= 1) { // Dentro de 1 hora del tiempo óptimo\\n    personalizedReminders.push({\\n      userId: user.id,\\n      telegramId: user.telegramId,\\n      reminderType,\\n      personalization,\\n      priority: user.lastMoodLevel <= 2 ? 'high' : 'normal',\\n      timing: {\\n        userLocalTime,\\n        timezone: userTimezone,\\n        optimalWindow: true\\n      }\\n    });\\n  }\\n}\\n\\nreturn personalizedReminders;\\\"\n      },\n      \\\"id\\\": \\\"personalize-reminders\\\",\n      \\\"name\\\": \\\"Personalizar Recordatorios\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.code\\\",\n      \\\"typeVersion\\\": 2,\n      \\\"position\\\": [680, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"batchSize\\\": 5,\n        \\\"options\\\": {}\n      },\n      \\\"id\\\": \\\"split-in-batches\\\",\n      \\\"name\\\": \\\"Procesar en Lotes\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.splitInBatches\\\",\n      \\\"typeVersion\\\": 3,\n      \\\"position\\\": [900, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"conditions\\\": {\n          \\\"options\\\": {\n            \\\"caseSensitive\\\": true,\n            \\\"leftValue\\\": \\\"\\\",\n            \\\"typeValidation\\\": \\\"strict\\\"\n          },\n          \\\"conditions\\\": [\n            {\n              \\\"id\\\": \\\"reminder-type-verse\\\",\n              \\\"leftValue\\\": \\\"={{ $json.reminderType }}\\\",\n              \\\"rightValue\\\": \\\"verse\\\",\n              \\\"operator\\\": {\n                \\\"type\\\": \\\"string\\\",\n                \\\"operation\\\": \\\"equals\\\"\n              }\n            }\n          ],\n          \\\"combinator\\\": \\\"and\\\"\n        },\n        \\\"options\\\": {}\n      },\n      \\\"id\\\": \\\"check-reminder-type\\\",\n      \\\"name\\\": \\\"Verificar Tipo de Recordatorio\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.if\\\",\n      \\\"typeVersion\\\": 2,\n      \\\"position\\\": [1120, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"url\\\": \\\"={{ $env.SERENIA_API_URL }}/api/verses/daily\\\",\n        \\\"authentication\\\": \\\"predefinedCredentialType\\\",\n        \\\"nodeCredentialType\\\": \\\"sereniaApi\\\",\n        \\\"sendQuery\\\": true,\n        \\\"queryParameters\\\": {\n          \\\"parameters\\\": [\n            {\n              \\\"name\\\": \\\"userId\\\",\n              \\\"value\\\": \\\"={{ $json.userId }}\\\"\n            },\n            {\n              \\\"name\\\": \\\"personalized\\\",\n              \\\"value\\\": \\\"true\\\"\n            }\n          ]\n        }\n      },\n      \\\"id\\\": \\\"get-daily-verse\\\",\n      \\\"name\\\": \\\"Obtener Versículo del Día\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.httpRequest\\\",\n      \\\"typeVersion\\\": 4.2,\n      \\\"position\\\": [1340, 200]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"jsCode\\\": \\\"// Generar mensaje de ánimo personalizado\\nconst userData = $input.first().json;\\nconst name = userData.personalization.name;\\nconst moodTrend = userData.personalization.moodTrend;\\n\\nconst encouragementMessages = [\\n  {\\n    condition: 'low_mood',\\n    message: `🙏 Buenos días ${name}, \\n\\nSé que las cosas pueden sentirse difíciles ahora, pero recuerda que Dios tiene un propósito para tu vida. \\n\\n*\\\"Porque yo sé los pensamientos que tengo acerca de vosotros, dice Jehová, pensamientos de paz, y no de mal, para daros el fin que esperáis.\\\"* - Jeremías 29:11\\n\\n¿Cómo puedo acompañarte hoy?`,\\n    buttons: [\\n      [{ text: '🙏 Orar juntos', callback_data: 'prayer_request' }],\\n      [{ text: '💬 Hablar', callback_data: 'chat_support' }],\\n      [{ text: '📖 Más versículos', callback_data: 'more_verses' }]\\n    ]\\n  },\\n  {\\n    condition: 'improving',\\n    message: `✨ ¡Buenos días ${name}! \\n\\nMe alegra ver que tu ánimo está mejorando. Dios está obrando en tu vida de maneras hermosas.\\n\\n*\\\"Dad gracias en todo, porque esta es la voluntad de Dios para con vosotros en Cristo Jesús.\\\"* - 1 Tesalonicenses 5:18\\n\\n¡Que tengas un día bendecido!`,\\n    buttons: [\\n      [{ text: '❤️ Dar gracias', callback_data: 'gratitude_moment' }],\\n      [{ text: '📊 Ver progreso', callback_data: 'view_progress' }]\\n    ]\\n  },\\n  {\\n    condition: 'stable',\\n    message: `🌅 Buenos días ${name}, \\n\\nQue este nuevo día esté lleno de las bendiciones de Dios. Él te acompaña en cada paso.\\n\\n*\\\"Jehová irá delante de ti; él estará contigo, no te dejará, ni te desamparará.\\\"* - Deuteronomio 31:8\\n\\n¿Cómo está tu corazón hoy?`,\\n    buttons: [\\n      [{ text: '😊 Muy bien', callback_data: 'mood_great' }, { text: '😐 Regular', callback_data: 'mood_okay' }],\\n      [{ text: '😔 No muy bien', callback_data: 'mood_low' }]\\n    ]\\n  }\\n];\\n\\n// Seleccionar mensaje basado en el estado del usuario\\nlet selectedMessage;\\nif (userData.priority === 'high' || moodTrend === 'declining') {\\n  selectedMessage = encouragementMessages.find(m => m.condition === 'low_mood');\\n} else if (moodTrend === 'improving') {\\n  selectedMessage = encouragementMessages.find(m => m.condition === 'improving');\\n} else {\\n  selectedMessage = encouragementMessages.find(m => m.condition === 'stable');\\n}\\n\\nreturn {\\n  ...userData,\\n  message: selectedMessage.message,\\n  buttons: selectedMessage.buttons,\\n  messageType: 'encouragement'\\n};\\\"\n      },\n      \\\"id\\\": \\\"generate-encouragement\\\",\n      \\\"name\\\": \\\"Generar Mensaje de Ánimo\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.code\\\",\n      \\\"typeVersion\\\": 2,\n      \\\"position\\\": [1340, 400]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"authentication\\\": \\\"predefinedCredentialType\\\",\n        \\\"nodeCredentialType\\\": \\\"telegramApi\\\",\n        \\\"resource\\\": \\\"message\\\",\n        \\\"operation\\\": \\\"sendMessage\\\",\n        \\\"chatId\\\": \\\"={{ $json.telegramId }}\\\",\n        \\\"text\\\": \\\"📖 *Versículo del día para ti* 📖\\n\\n*\\\"{{ $json.verse?.text }}\\\"*\\n**{{ $json.verse?.reference }}**\\n\\n💭 {{ $json.verse?.reflection }}\\n\\n🙏 Que esta palabra de Dios ilumine tu día, {{ $json.personalization.name }}.\\\",\n        \\\"additionalFields\\\": {\n          \\\"parseMode\\\": \\\"Markdown\\\",\n          \\\"replyMarkup\\\": \\\"{\\n            \\\\\\\"inline_keyboard\\\\\\\": [\\n              [\\n                { \\\\\\\"text\\\\\\\": \\\\\\\"❤️ Me gusta\\\\\\\", \\\\\\\"callback_data\\\\\\\": \\\\\\\"like_verse\\\\\\\" },\\n                { \\\\\\\"text\\\\\\\": \\\\\\\"💫 Compartir\\\\\\\", \\\\\\\"callback_data\\\\\\\": \\\\\\\"share_verse\\\\\\\" }\\n              ],\\n              [\\n                { \\\\\\\"text\\\\\\\": \\\\\\\"🔄 Otro versículo\\\\\\\", \\\\\\\"callback_data\\\\\\\": \\\\\\\"another_verse\\\\\\\" },\\n                { \\\\\\\"text\\\\\\\": \\\\\\\"🙏 Oración\\\\\\\", \\\\\\\"callback_data\\\\\\\": \\\\\\\"prayer_moment\\\\\\\" }\\n              ]\\n            ]\\n          }\\\"\n        }\n      },\n      \\\"id\\\": \\\"send-verse-telegram\\\",\n      \\\"name\\\": \\\"Enviar Versículo - Telegram\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.telegram\\\",\n      \\\"typeVersion\\\": 1.1,\n      \\\"position\\\": [1560, 200]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"authentication\\\": \\\"predefinedCredentialType\\\",\n        \\\"nodeCredentialType\\\": \\\"telegramApi\\\",\n        \\\"resource\\\": \\\"message\\\",\n        \\\"operation\\\": \\\"sendMessage\\\",\n        \\\"chatId\\\": \\\"={{ $json.telegramId }}\\\",\n        \\\"text\\\": \\\"={{ $json.message }}\\\",\n        \\\"additionalFields\\\": {\n          \\\"parseMode\\\": \\\"Markdown\\\",\n          \\\"replyMarkup\\\": \\\"={{ JSON.stringify({ inline_keyboard: $json.buttons }) }}\\\"\n        }\n      },\n      \\\"id\\\": \\\"send-encouragement-telegram\\\",\n      \\\"name\\\": \\\"Enviar Ánimo - Telegram\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.telegram\\\",\n      \\\"typeVersion\\\": 1.1,\n      \\\"position\\\": [1560, 400]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"mode\\\": \\\"combine\\\",\n        \\\"combineBy\\\": \\\"combineByPosition\\\",\n        \\\"options\\\": {}\n      },\n      \\\"id\\\": \\\"merge-results\\\",\n      \\\"name\\\": \\\"Combinar Resultados\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.merge\\\",\n      \\\"typeVersion\\\": 2.1,\n      \\\"position\\\": [1780, 300]\n    },\n    {\n      \\\"parameters\\\": {\n        \\\"url\\\": \\\"={{ $env.SERENIA_API_URL }}/api/automation/logs\\\",\n        \\\"authentication\\\": \\\"predefinedCredentialType\\\",\n        \\\"nodeCredentialType\\\": \\\"sereniaApi\\\",\n        \\\"sendHeaders\\\": true,\n        \\\"headerParameters\\\": {\n          \\\"parameters\\\": [\n            {\n              \\\"name\\\": \\\"Content-Type\\\",\n              \\\"value\\\": \\\"application/json\\\"\n            }\n          ]\n        },\n        \\\"sendBody\\\": true,\n        \\\"bodyParameters\\\": {\n          \\\"parameters\\\": [\n            {\n              \\\"name\\\": \\\"workflowId\\\",\n              \\\"value\\\": \\\"smart-reminders\\\"\n            },\n            {\n              \\\"name\\\": \\\"userId\\\",\n              \\\"value\\\": \\\"={{ $json.userId }}\\\"\n            },\n            {\n              \\\"name\\\": \\\"action\\\",\n              \\\"value\\\": \\\"reminder_sent\\\"\n            },\n            {\n              \\\"name\\\": \\\"success\\\",\n              \\\"value\\\": true\n            },\n            {\n              \\\"name\\\": \\\"metadata\\\",\n              \\\"value\\\": \\\"={{ { reminderType: $json.reminderType, messageType: $json.messageType, priority: $json.priority } }}\\\"\n            }\n          ]\n        }\n      },\n      \\\"id\\\": \\\"log-reminder\\\",\n      \\\"name\\\": \\\"Registrar Recordatorio\\\",\n      \\\"type\\\": \\\"n8n-nodes-base.httpRequest\\\",\n      \\\"typeVersion\\\": 4.2,\n      \\\"position\\\": [2000, 300]\n    }\n  ],\n  \\\"connections\\\": {\n    \\\"schedule-trigger\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"get-active-users\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"get-active-users\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"personalize-reminders\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"personalize-reminders\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"split-in-batches\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"split-in-batches\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"check-reminder-type\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"check-reminder-type\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"get-daily-verse\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ],\n        [\n          {\n            \\\"node\\\": \\\"generate-encouragement\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"get-daily-verse\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"send-verse-telegram\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"generate-encouragement\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"send-encouragement-telegram\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"send-verse-telegram\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"merge-results\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    },\n    \\\"send-encouragement-telegram\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"merge-results\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 1\n          }\n        ]\n      ]\n    },\n    \\\"merge-results\\\": {\n      \\\"main\\\": [\n        [\n          {\n            \\\"node\\\": \\\"log-reminder\\\",\n            \\\"type\\\": \\\"main\\\",\n            \\\"index\\\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \\\"active\\\": true,\n  \\\"settings\\\": {\n    \\\"executionOrder\\\": \\\"v1\\\"\n  },\n  \\\"versionId\\\": \\\"1\\\",\n  \\\"meta\\\": {\n    \\\"templateCredsSetupCompleted\\\": true,\n    \\\"instanceId\\\": \\\"serenia-smart-reminders\\\"\n  },\n  \\\"id\\\": \\\"smart-reminders-workflow\\\",\n  \\\"tags\\\": [\n    {\n      \\\"createdAt\\\": \\\"2024-01-15T10:00:00.000Z\\\",\n      \\\"updatedAt\\\": \\\"2024-01-15T10:00:00.000Z\\\",\n      \\\"id\\\": \\\"serenia-workflows\\\",\n      \\\"name\\\": \\\"SerenIA Workflows\\\"\n    }\n  ]\n}\",\n        \"filePath\": \"C:\\Users\\diaz8\\PROYECTO_FINAL_DW1\\n8n\\workflows\\smart-reminders-workflow.json\"\n      }\n    }\n  ]\n}"
+},
+{
+  "invoke": "replace_string_in_file",
+  "parameters": {
+    "filePath": "C:\\Users\\diaz8\\PROYECTO_FINAL_DW1\\src\\components\\Navigation.tsx",
+    "newString": "  const navigationItems = [\n    { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },\n    { href: '/mood', label: 'Estado de Ánimo', icon: Heart },\n    { href: '/chat', label: 'Chat con SerenIA', icon: MessageCircle },\n    { href: '/verses', label: 'Versículos', icon: BookOpen },\n    { href: '/tests', label: 'Tests', icon: TestTube },\n    { href: '/community', label: 'Comunidad', icon: Users },\n    { href: '/telegram', label: 'Bot Telegram', icon: Settings },\n    { href: '/automation', label: 'Automatización', icon: FileText },\n  ]",
+    "oldString": "  const navigationItems = [\n    { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },\n    { href: '/mood', label: 'Estado de Ánimo', icon: Heart },\n    { href: '/chat', label: 'Chat con SerenIA', icon: MessageCircle },\n    { href: '/verses', label: 'Versículos', icon: BookOpen },\n    { href: '/tests', label: 'Tests', icon: TestTube },\n    { href: '/community', label: 'Comunidad', icon: Users },\n    { href: '/telegram', label: 'Bot Telegram', icon: Settings },\n  ]"
+  }
+}
+
+<function_calls>
+<invoke name="create_file">
+<parameter name="content">{
+  "name": "SerenIA - Recordatorios Inteligentes",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Programador - Recordatorios Diarios",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SERENIA_API_URL }}/api/users/active",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "sereniaApi"
+      },
+      "id": "get-active-users",
+      "name": "Obtener Usuarios Activos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Personalizar recordatorios por usuario\nconst users = $input.first().json.users;\nconst currentHour = new Date().getHours();\nconst personalizedReminders = [];\n\nfor (const user of users) {\n  const userTimezone = user.timezone || 'America/Mexico_City';\n  const userLocalTime = new Date().toLocaleString('en-US', { timeZone: userTimezone });\n  const userHour = new Date(userLocalTime).getHours();\n  \n  // Determinar el tipo de recordatorio óptimo\n  let reminderType = 'verse';\n  if (user.lastMoodLevel <= 2) reminderType = 'encouragement';\n  if (user.preferredReminderType) reminderType = user.preferredReminderType;\n  \n  // Personalizar contenido basado en el historial del usuario\n  const personalization = {\n    name: user.firstName || 'hermano/a',\n    lastActivity: user.lastActivity,\n    moodTrend: user.moodTrend || 'stable',\n    preferredContent: user.preferredContent || 'verses'\n  };\n  \n  // Verificar si es el momento óptimo para este usuario\n  const optimalTime = user.reminderSettings?.optimalTime || 8;\n  const timeWindow = Math.abs(userHour - optimalTime);\n  \n  if (timeWindow <= 1) { // Dentro de 1 hora del tiempo óptimo\n    personalizedReminders.push({\n      userId: user.id,\n      telegramId: user.telegramId,\n      reminderType,\n      personalization,\n      priority: user.lastMoodLevel <= 2 ? 'high' : 'normal',\n      timing: {\n        userLocalTime,\n        timezone: userTimezone,\n        optimalWindow: true\n      }\n    });\n  }\n}\n\nreturn personalizedReminders;"
+      },
+      "id": "personalize-reminders",
+      "name": "Personalizar Recordatorios",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-in-batches",
+      "name": "Procesar en Lotes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "reminder-type-verse",
+              "leftValue": "={{ $json.reminderType }}",
+              "rightValue": "verse",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-reminder-type",
+      "name": "Verificar Tipo de Recordatorio",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SERENIA_API_URL }}/api/verses/daily",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "sereniaApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            },
+            {
+              "name": "personalized",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "id": "get-daily-verse",
+      "name": "Obtener Versículo del Día",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generar mensaje de ánimo personalizado\nconst userData = $input.first().json;\nconst name = userData.personalization.name;\nconst moodTrend = userData.personalization.moodTrend;\n\nconst encouragementMessages = [\n  {\n    condition: 'low_mood',\n    message: `🙏 Buenos días ${name}, \\n\\nSé que las cosas pueden sentirse difíciles ahora, pero recuerda que Dios tiene un propósito para tu vida. \\n\\n*\"Porque yo sé los pensamientos que tengo acerca de vosotros, dice Jehová, pensamientos de paz, y no de mal, para daros el fin que esperáis.\"* - Jeremías 29:11\\n\\n¿Cómo puedo acompañarte hoy?`,\n    buttons: [\n      [{ text: '🙏 Orar juntos', callback_data: 'prayer_request' }],\n      [{ text: '💬 Hablar', callback_data: 'chat_support' }],\n      [{ text: '📖 Más versículos', callback_data: 'more_verses' }]\n    ]\n  },\n  {\n    condition: 'improving',\n    message: `✨ ¡Buenos días ${name}! \\n\\nMe alegra ver que tu ánimo está mejorando. Dios está obrando en tu vida de maneras hermosas.\\n\\n*\"Dad gracias en todo, porque esta es la voluntad de Dios para con vosotros en Cristo Jesús.\"* - 1 Tesalonicenses 5:18\\n\\n¡Que tengas un día bendecido!`,\n    buttons: [\n      [{ text: '❤️ Dar gracias', callback_data: 'gratitude_moment' }],\n      [{ text: '📊 Ver progreso', callback_data: 'view_progress' }]\n    ]\n  },\n  {\n    condition: 'stable',\n    message: `🌅 Buenos días ${name}, \\n\\nQue este nuevo día esté lleno de las bendiciones de Dios. Él te acompaña en cada paso.\\n\\n*\"Jehová irá delante de ti; él estará contigo, no te dejará, ni te desamparará.\"* - Deuteronomio 31:8\\n\\n¿Cómo está tu corazón hoy?`,\n    buttons: [\n      [{ text: '😊 Muy bien', callback_data: 'mood_great' }, { text: '😐 Regular', callback_data: 'mood_okay' }],\n      [{ text: '😔 No muy bien', callback_data: 'mood_low' }]\n    ]\n  }\n];\n\n// Seleccionar mensaje basado en el estado del usuario\nlet selectedMessage;\nif (userData.priority === 'high' || moodTrend === 'declining') {\n  selectedMessage = encouragementMessages.find(m => m.condition === 'low_mood');\n} else if (moodTrend === 'improving') {\n  selectedMessage = encouragementMessages.find(m => m.condition === 'improving');\n} else {\n  selectedMessage = encouragementMessages.find(m => m.condition === 'stable');\n}\n\nreturn {\n  ...userData,\n  message: selectedMessage.message,\n  buttons: selectedMessage.buttons,\n  messageType: 'encouragement'\n};"
+      },
+      "id": "generate-encouragement",
+      "name": "Generar Mensaje de Ánimo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi",
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.telegramId }}",
+        "text": "📖 *Versículo del día para ti* 📖\n\n*\"{{ $json.verse?.text }}\"*\n**{{ $json.verse?.reference }}**\n\n💭 {{ $json.verse?.reflection }}\n\n🙏 Que esta palabra de Dios ilumine tu día, {{ $json.personalization.name }}.",
+        "additionalFields": {
+          "parseMode": "Markdown",
+          "replyMarkup": "{\n            \"inline_keyboard\": [\n              [\n                { \"text\": \"❤️ Me gusta\", \"callback_data\": \"like_verse\" },\n                { \"text\": \"💫 Compartir\", \"callback_data\": \"share_verse\" }\n              ],\n              [\n                { \"text\": \"🔄 Otro versículo\", \"callback_data\": \"another_verse\" },\n                { \"text\": \"🙏 Oración\", \"callback_data\": \"prayer_moment\" }\n              ]\n            ]\n          }"
+        }
+      },
+      "id": "send-verse-telegram",
+      "name": "Enviar Versículo - Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi",
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.telegramId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parseMode": "Markdown",
+          "replyMarkup": "={{ JSON.stringify({ inline_keyboard: $json.buttons }) }}"
+        }
+      },
+      "id": "send-encouragement-telegram",
+      "name": "Enviar Ánimo - Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "get-active-users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-active-users": {
+      "main": [
+        [
+          {
+            "node": "personalize-reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "personalize-reminders": {
+      "main": [
+        [
+          {
+            "node": "split-in-batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-in-batches": {
+      "main": [
+        [
+          {
+            "node": "check-reminder-type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-reminder-type": {
+      "main": [
+        [
+          {
+            "node": "get-daily-verse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "generate-encouragement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-daily-verse": {
+      "main": [
+        [
+          {
+            "node": "send-verse-telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-encouragement": {
+      "main": [
+        [
+          {
+            "node": "send-encouragement-telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "serenia-smart-reminders"
+  },
+  "id": "smart-reminders-workflow",
+  "tags": [
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "serenia-workflows",
+      "name": "SerenIA Workflows"
+    }
+  ]
+}
