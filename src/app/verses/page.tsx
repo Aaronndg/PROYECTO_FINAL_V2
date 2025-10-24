@@ -39,6 +39,7 @@ export default function VersesPage() {
   const [dailyVerse, setDailyVerse] = useState<Verse | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null)
+  const [demoMode, setDemoMode] = useState(false)
   const [filters, setFilters] = useState<VerseFilter>({
     category: 'all',
     emotion: 'all',
@@ -65,10 +66,64 @@ export default function VersesPage() {
     { value: 'paz', label: 'Paz' }
   ]
 
+  // Demo verses data
+  const demoVerses: Verse[] = [
+    {
+      id: 'demo-1',
+      title: 'Paz en la tormenta',
+      content: 'La paz os dejo, mi paz os doy; yo no os la doy como el mundo la da. No se turbe vuestro corazón, ni tenga miedo. - Juan 14:27',
+      category: 'paz',
+      tags: ['paz', 'ansiedad', 'calma'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-2',
+      title: 'Fortaleza en la debilidad',
+      content: 'Todo lo puedo en Cristo que me fortalece. - Filipenses 4:13',
+      category: 'fortaleza',
+      tags: ['fortaleza', 'esperanza', 'valor'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-3',
+      title: 'Amor incondicional',
+      content: 'Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna. - Juan 3:16',
+      category: 'amor',
+      tags: ['amor', 'salvación', 'esperanza'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-4',
+      title: 'Refugio en tiempos difíciles',
+      content: 'Dios es nuestro amparo y fortaleza, nuestro pronto auxilio en las tribulaciones. - Salmos 46:1',
+      category: 'consuelo',
+      tags: ['consuelo', 'refugio', 'fortaleza'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-5',
+      title: 'Esperanza renovada',
+      content: 'Pero los que esperan a Jehová tendrán nuevas fuerzas; levantarán alas como las águilas. - Isaías 40:31',
+      category: 'esperanza',
+      tags: ['esperanza', 'renovación', 'fortaleza'],
+      created_at: new Date().toISOString()
+    }
+  ]
+
   useEffect(() => {
-    fetchVerses()
-    fetchDailyVerse()
-  }, [])
+    if (!session) {
+      // Demo mode
+      setDemoMode(true)
+      setVerses(demoVerses)
+      setDailyVerse(demoVerses[0])
+      setLoading(false)
+    } else {
+      // Authenticated mode
+      setDemoMode(false)
+      fetchVerses()
+      fetchDailyVerse()
+    }
+  }, [session])
 
   useEffect(() => {
     filterVerses()
@@ -200,6 +255,21 @@ export default function VersesPage() {
             Encuentra consuelo, esperanza y dirección en la Palabra de Dios
           </p>
         </div>
+
+        {/* Demo Mode Alert */}
+        {demoMode && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+            <div className="flex items-center">
+              <Star className="w-5 h-5 text-yellow-600 mr-2" />
+              <p className="text-yellow-800">
+                <strong>Modo Demo:</strong> Explorando versículos de muestra. Para acceder a la biblioteca completa y guardar favoritos,{' '}
+                <a href="/auth/signin" className="text-yellow-900 underline">
+                  crea una cuenta gratuita
+                </a>.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Daily Verse Section */}
         {dailyVerse && (

@@ -67,6 +67,7 @@ export default function CommunityPage() {
   const [selectedNote, setSelectedNote] = useState<CommunityNote | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
+  const [demoMode, setDemoMode] = useState(false)
 
   const categories = [
     { value: 'all', label: 'Todas', icon: Users, color: 'text-gray-500' },
@@ -81,11 +82,14 @@ export default function CommunityPage() {
     if (status === 'loading') return
     
     if (status === 'unauthenticated') {
-      window.location.href = '/auth/signin'
+      // Demo mode - load sample data
+      setDemoMode(true)
+      loadDemoNotes()
       return
     }
 
     if (session?.user) {
+      setDemoMode(false)
       loadCommunityNotes()
     }
   }, [session, status])
@@ -93,6 +97,62 @@ export default function CommunityPage() {
   useEffect(() => {
     filterNotes()
   }, [notes, selectedCategory, searchQuery])
+
+  const loadDemoNotes = () => {
+    const demoNotes: CommunityNote[] = [
+      {
+        id: 'demo-1',
+        user_id: 'demo-user-1',
+        author_name: 'María González',
+        title: 'Cómo Dios me ayudó a superar la ansiedad',
+        content: 'Quiero compartir mi testimonio sobre cómo la oración y la confianza en Dios me ayudaron a superar un período muy difícil de ansiedad. Durante meses, me sentía abrumada por las preocupaciones del trabajo y la familia...\n\nPero cuando comencé a dedicar tiempo cada mañana para orar y meditar en Filipenses 4:6-7, todo cambió. Aprendí a entregar mis cargas a Dios y experimenté Su paz que sobrepasa todo entendimiento.',
+        category: 'testimony',
+        tags: ['ansiedad', 'oración', 'testimonio', 'paz'],
+        is_public: true,
+        is_featured: true,
+        likes_count: 23,
+        comments_count: 8,
+        views_count: 156,
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'demo-2',
+        user_id: 'demo-user-2',
+        author_name: 'Carlos Ramírez',
+        title: 'Reflexión sobre el perdón',
+        content: 'El perdón es uno de los temas más difíciles pero más hermosos del cristianismo. He estado reflexionando sobre Mateo 6:14-15 y cómo Jesús nos enseña que debemos perdonar como hemos sido perdonados...\n\nEs un proceso, no un evento. Cada día debo elegir perdonar, incluso cuando no siento ganas de hacerlo.',
+        category: 'reflection',
+        tags: ['perdón', 'reflexión', 'Jesús', 'proceso'],
+        is_public: true,
+        is_featured: false,
+        likes_count: 17,
+        comments_count: 5,
+        views_count: 89,
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'demo-3',
+        user_id: 'demo-user-3',
+        author_name: 'Ana Sofía',
+        title: 'Petición de oración por mi familia',
+        content: 'Hermanos, les pido que oren por mi familia. Mi esposo ha perdido su trabajo y estamos pasando por un momento muy difícil económicamente. Sé que Dios tiene el control, pero a veces la fe se tambalea...\n\nAgradezco sus oraciones y cualquier palabra de ánimo.',
+        category: 'prayer',
+        tags: ['oración', 'familia', 'trabajo', 'dificultades'],
+        is_public: true,
+        is_featured: false,
+        likes_count: 31,
+        comments_count: 12,
+        views_count: 234,
+        created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+    
+    setNotes(demoNotes)
+    setLoading(false)
+  }
 
   const loadCommunityNotes = async () => {
     try {
@@ -344,6 +404,21 @@ export default function CommunityPage() {
           </p>
         </div>
 
+        {/* Demo Mode Alert */}
+        {demoMode && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+            <div className="flex items-center">
+              <Star className="w-5 h-5 text-yellow-600 mr-2" />
+              <p className="text-yellow-800">
+                <strong>Modo Demo:</strong> Explorando contenido de muestra de la comunidad. Para participar y compartir,{' '}
+                <a href="/auth/signin" className="text-yellow-900 underline">
+                  crea una cuenta gratuita
+                </a>.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Actions Bar */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -383,13 +458,23 @@ export default function CommunityPage() {
             </div>
 
             {/* Create Note Button */}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-serenia-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-serenia-700 transition-colors flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Nota
-            </button>
+            {demoMode ? (
+              <a
+                href="/auth/signin"
+                className="bg-serenia-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-serenia-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Unirse para Participar
+              </a>
+            ) : (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-serenia-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-serenia-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nueva Nota
+              </button>
+            )}
           </div>
         </div>
 

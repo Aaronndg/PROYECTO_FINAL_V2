@@ -47,6 +47,44 @@ export default function TestsPage() {
   const [recentResults, setRecentResults] = useState<TestResult[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [demoMode, setDemoMode] = useState(false)
+
+  // Demo tests data
+  const demoTests: Test[] = [
+    {
+      id: 'demo-1',
+      title: 'Test de Bienestar Emocional',
+      description: 'Evalúa tu estado emocional actual y recibe recomendaciones personalizadas',
+      category: 'emotional',
+      duration: 10,
+      questions_count: 25,
+      difficulty: 'easy',
+      tags: ['emociones', 'ansiedad', 'estrés', 'autoestima'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-2', 
+      title: 'Evaluación de Fe y Espiritualidad',
+      description: 'Descubre tu relación con Dios y áreas de crecimiento espiritual',
+      category: 'spiritual',
+      duration: 15,
+      questions_count: 30,
+      difficulty: 'medium',
+      tags: ['fe', 'oración', 'comunión', 'servicio'],
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'demo-3',
+      title: 'Análisis de Personalidad Cristiana',
+      description: 'Identifica tus dones espirituales y fortalezas de carácter',
+      category: 'personality',
+      duration: 20,
+      questions_count: 40,
+      difficulty: 'medium',
+      tags: ['dones', 'carácter', 'temperamento', 'ministerio'],
+      created_at: new Date().toISOString()
+    }
+  ]
 
   const categories = [
     { value: 'all', label: 'Todos', icon: TestTube, color: 'text-serenia-500' },
@@ -125,8 +163,15 @@ export default function TestsPage() {
   ]
 
   useEffect(() => {
-    loadTests()
-    if (session) {
+    if (!session) {
+      // Demo mode - use demo tests
+      setDemoMode(true)
+      setTests(demoTests)
+      setLoading(false)
+    } else {
+      // Authenticated mode
+      setDemoMode(false)
+      loadTests()
       loadRecentResults()
     }
   }, [session])
@@ -218,6 +263,21 @@ export default function TestsPage() {
             para ayudarte en tu camino de fe y bienestar
           </p>
         </div>
+
+        {/* Demo Mode Alert */}
+        {demoMode && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+            <div className="flex items-center">
+              <Star className="w-5 h-5 text-yellow-600 mr-2" />
+              <p className="text-yellow-800">
+                <strong>Modo Demo:</strong> Puedes explorar los tests disponibles. Para guardar resultados y hacer seguimiento,{' '}
+                <a href="/auth/signin" className="text-yellow-900 underline">
+                  crea una cuenta gratuita
+                </a>.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stats Section for Authenticated Users */}
         {session && recentResults.length > 0 && (

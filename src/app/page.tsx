@@ -32,7 +32,7 @@ export default async function Home() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
               <Link 
-                href="/chat"
+                href="/demo"
                 className="border-2 border-serenia-600 text-serenia-600 px-8 py-3 rounded-lg font-semibold hover:bg-serenia-50 transition-colors"
               >
                 Probar sin registro
