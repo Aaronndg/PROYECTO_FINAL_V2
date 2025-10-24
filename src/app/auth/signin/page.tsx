@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Heart, Mail, Lock, User, Eye, EyeOff, ArrowRight, Key } from 'lucide-react'
 
 export default function SignInPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
@@ -15,6 +15,16 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Auto-fill credentials from URL parameters
+  useEffect(() => {
+    const urlEmail = searchParams.get('email')
+    const urlPassword = searchParams.get('password')
+    
+    if (urlEmail) setEmail(urlEmail)
+    if (urlPassword) setPassword(urlPassword)
+  }, [searchParams])
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -221,6 +231,51 @@ export default function SignInPage() {
               )}
             </button>
           </form>
+
+          {/* Demo Credentials Quick Access */}
+          {mode === 'signin' && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center mb-2">
+                <Key className="w-4 h-4 text-blue-600 mr-2" />
+                <span className="text-sm font-medium text-blue-800">Credenciales Demo</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('maria@demo.com')
+                    setPassword('demo123')
+                  }}
+                  className="bg-white border border-blue-300 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
+                >
+                  María
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('carlos@demo.com')
+                    setPassword('demo123')
+                  }}
+                  className="bg-white border border-blue-300 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
+                >
+                  Carlos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('ana@demo.com')
+                    setPassword('demo123')
+                  }}
+                  className="bg-white border border-blue-300 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
+                >
+                  Ana
+                </button>
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                Haz clic para auto-completar • Contraseña: demo123
+              </p>
+            </div>
+          )}
 
           {/* Divider */}
           <div className="relative mb-6">

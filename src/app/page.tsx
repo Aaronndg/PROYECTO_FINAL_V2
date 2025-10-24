@@ -23,20 +23,30 @@ export default async function Home() {
           </p>
           
           {!session ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                href="/auth/signin"
-                className="bg-serenia-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-serenia-700 transition-colors flex items-center justify-center"
-              >
-                Comenzar mi viaje
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-              <Link 
-                href="/demo"
-                className="border-2 border-serenia-600 text-serenia-600 px-8 py-3 rounded-lg font-semibold hover:bg-serenia-50 transition-colors"
-              >
-                Probar sin registro
-              </Link>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link 
+                  href="/auth/signin"
+                  className="bg-serenia-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-serenia-700 transition-colors flex items-center justify-center"
+                >
+                  Comenzar mi viaje
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Link>
+                <Link 
+                  href="/demo"
+                  className="border-2 border-serenia-600 text-serenia-600 px-8 py-3 rounded-lg font-semibold hover:bg-serenia-50 transition-colors"
+                >
+                  Probar sin registro
+                </Link>
+              </div>
+              <div className="text-center">
+                <Link 
+                  href="/credentials"
+                  className="text-sm text-serenia-600 hover:text-serenia-700 underline"
+                >
+                  Ver credenciales demo para prueba completa
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-lg p-6 shadow-lg max-w-md mx-auto">

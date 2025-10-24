@@ -27,7 +27,43 @@ export const authOptions: NextAuthOptions = {
 
         const { email, password, mode, name } = credentials
 
+        // Usuarios demo predefinidos para la presentación
+        const demoUsers = [
+          {
+            id: 'demo-user-1',
+            email: 'maria@demo.com',
+            password: 'demo123',
+            name: 'María González',
+            image: null
+          },
+          {
+            id: 'demo-user-2', 
+            email: 'carlos@demo.com',
+            password: 'demo123',
+            name: 'Carlos Ramírez',
+            image: null
+          },
+          {
+            id: 'demo-user-3',
+            email: 'ana@demo.com',
+            password: 'demo123',
+            name: 'Ana Sofía López',
+            image: null
+          }
+        ]
+
         try {
+          // Primero verificar si es un usuario demo
+          const demoUser = demoUsers.find(user => user.email === email)
+          if (demoUser && password === demoUser.password) {
+            return {
+              id: demoUser.id,
+              email: demoUser.email,
+              name: demoUser.name,
+              image: demoUser.image
+            }
+          }
+
           if (mode === 'signup') {
             // En modo demo, simular creación de usuario exitosa
             if (supabaseUrl === 'https://demo.supabase.co') {
