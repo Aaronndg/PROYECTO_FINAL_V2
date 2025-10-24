@@ -11,6 +11,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'demo-servic
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export const authOptions: NextAuthOptions = {
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -54,11 +55,17 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Primero verificar si es un usuario demo
-          console.log('Attempting login with:', { email, password, mode })
+          console.log('Auth: Attempting login with:', { 
+            email, 
+            mode, 
+            hasPassword: !!password,
+            environment: process.env.NODE_ENV,
+            hasSecret: !!process.env.NEXTAUTH_SECRET 
+          })
           const demoUser = demoUsers.find(user => 
             user.email.toLowerCase() === email.toLowerCase()
           )
-          console.log('Found demo user:', demoUser)
+          console.log('Auth: Found demo user:', !!demoUser)
           
           if (demoUser && password === demoUser.password) {
             console.log('Demo user authentication successful')
