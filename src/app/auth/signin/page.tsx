@@ -47,8 +47,33 @@ export default function SignInPage() {
     }
   }
 
-  const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' })
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+    
+    try {
+      const result = await signIn('google', { 
+        callbackUrl: '/dashboard',
+        redirect: false 
+      })
+      
+      if (result?.error) {
+        if (result.error === 'OAuthCallback') {
+          setError('Error de configuración OAuth. Por favor, contacta al administrador.')
+        } else if (result.error === 'AccessDenied') {
+          setError('Acceso denegado. Verifica que tengas permisos para usar esta aplicación.')
+        } else {
+          setError('Error al iniciar sesión con Google. Intenta de nuevo.')
+        }
+      } else if (result?.url) {
+        router.push(result.url)
+      }
+    } catch (error) {
+      setError('Error de conexión. Verifica tu internet e intenta de nuevo.')
+      console.error('Google sign in error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
