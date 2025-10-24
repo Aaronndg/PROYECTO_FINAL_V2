@@ -54,8 +54,14 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Primero verificar si es un usuario demo
-          const demoUser = demoUsers.find(user => user.email === email)
+          console.log('Attempting login with:', { email, password, mode })
+          const demoUser = demoUsers.find(user => 
+            user.email.toLowerCase() === email.toLowerCase()
+          )
+          console.log('Found demo user:', demoUser)
+          
           if (demoUser && password === demoUser.password) {
+            console.log('Demo user authentication successful')
             return {
               id: demoUser.id,
               email: demoUser.email,
@@ -64,7 +70,10 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          if (mode === 'signup') {
+          // Si no es usuario demo y no hay modo específico, asumir signin
+          const actualMode = mode || 'signin'
+
+          if (actualMode === 'signup') {
             // En modo demo, simular creación de usuario exitosa
             if (supabaseUrl === 'https://demo.supabase.co') {
               return {

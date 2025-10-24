@@ -31,27 +31,33 @@ export default function SignInPage() {
     setLoading(true)
     setError('')
 
+    console.log('Frontend: Attempting login with:', { email, password, mode })
+
     try {
       const result = await signIn('credentials', {
         email,
         password,
-        mode,
+        mode: mode || 'signin', // Asegurar que siempre hay un modo
         name: mode === 'signup' ? name : '',
         redirect: false
       })
 
+      console.log('Frontend: SignIn result:', result)
+
       if (result?.error) {
         setError(result.error)
+        console.error('Frontend: SignIn error:', result.error)
       } else {
         // Verificar la sesión y redirigir
         const session = await getSession()
+        console.log('Frontend: Session after login:', session)
         if (session) {
           router.push('/dashboard')
         }
       }
     } catch (error) {
       setError('Ocurrió un error inesperado')
-      console.error('Auth error:', error)
+      console.error('Frontend: Auth error:', error)
     } finally {
       setLoading(false)
     }
