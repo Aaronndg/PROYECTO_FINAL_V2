@@ -82,7 +82,7 @@ export default function CredentialsPage() {
           </div>
           <ol className="text-blue-700 space-y-2">
             <li>1. Elige uno de los usuarios demo de abajo</li>
-            <li>2. Copia las credenciales o haz clic en "Iniciar Sesión Directo"</li>
+            <li>2. Copia las credenciales o haz clic en &quot;Iniciar Sesión Directo&quot;</li>
             <li>3. Explora todas las funcionalidades con datos guardados</li>
             <li>4. Cada usuario tiene un perfil y datos únicos</li>
           </ol>
