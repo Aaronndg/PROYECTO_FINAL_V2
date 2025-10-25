@@ -104,60 +104,74 @@ export async function generateEmpatheticResponse(
   conversationHistory?: Array<{ role: string; content: string }>
 ): Promise<AIResponseData> {
   try {
+    console.log('🤖 AI Service - Processing message:', userMessage)
     const riskLevel = analyzeRiskLevel(userMessage)
+    console.log('📊 Risk level detected:', riskLevel)
     
-    // Build context from relevant resources
-    let resourceContext = ''
-    if (relevantResources && relevantResources.length > 0) {
-      resourceContext = `\n\nRECURSOS RELEVANTES:\n${relevantResources
-        .map(r => `- ${r.title}: ${r.content.substring(0, 200)}...`)
-        .join('\n')}`
-    }
+    // Check if we have OpenAI API key
+    const hasOpenAI = !!process.env.OPENAI_API_KEY
+    console.log('🔑 OpenAI API available:', hasOpenAI)
     
-    // Build mood context
-    let moodContextText = ''
-    if (moodContext) {
-      moodContextText = `\n\nCONTEXTO DEL ESTADO DE ÁNIMO:\nPuntuación: ${moodContext.score}/10\nDescripción: ${moodContext.description}`
-    }
-    
-    // Prepare messages for the AI
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...(conversationHistory || []),
-      {
-        role: 'user',
-        content: `${userMessage}${moodContextText}${resourceContext}
+    if (hasOpenAI) {
+      try {
+        console.log('🚀 Attempting OpenAI API call...')
+        // Try OpenAI first
+        const messages = [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...(conversationHistory || []),
+          {
+            role: 'user',
+            content: `${userMessage}${moodContext ? `\n\nEstado de ánimo: ${moodContext.description} (${moodContext.score}/10)` : ''}
+            
+            Por favor, responde con empatía y sabiduría cristiana. Nivel de riesgo detectado: ${riskLevel}`
+          }
+        ]
         
-        Por favor, responde con empatía y sabiduría cristiana. Nivel de riesgo detectado: ${riskLevel}`
+        const response = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: messages as any,
+          temperature: 0.7,
+          max_tokens: 500,
+        })
+        
+        const content = response.choices[0]?.message?.content || ''
+        console.log('✅ OpenAI response received:', content.substring(0, 100) + '...')
+        
+        if (content) {
+          return {
+            content,
+            emotionDetected: detectEmotion(userMessage),
+            riskLevel,
+            suggestedActions: generateSuggestedActions(riskLevel, userMessage),
+            relevantResources,
+          }
+        }
+      } catch (openaiError) {
+        console.error('❌ OpenAI API Error:', openaiError)
       }
-    ]
+    }
     
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: messages as any,
-      temperature: 0.7,
-      max_tokens: 500,
-    })
-    
-    const content = response.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta apropiada en este momento.'
-    
-    // Generate suggested actions based on risk level and content
-    const suggestedActions = generateSuggestedActions(riskLevel, userMessage)
+    // Fallback to pattern-based response (demo mode)
+    console.log('🎯 Using pattern-based AI response (demo mode)')
+    const content = generatePatternBasedResponse(userMessage, riskLevel, moodContext)
+    console.log('✅ Pattern-based response generated:', content.substring(0, 100) + '...')
     
     return {
       content,
       emotionDetected: detectEmotion(userMessage),
       riskLevel,
-      suggestedActions,
+      suggestedActions: generateSuggestedActions(riskLevel, userMessage),
       relevantResources,
     }
   } catch (error) {
-    console.error('Error generating AI response:', error)
+    console.error('❌ Error generating AI response:', error)
     
-    // Fallback response based on risk level
+    // Always fallback to pattern-based response
     const fallbackRiskLevel = analyzeRiskLevel(userMessage)
+    const content = generatePatternBasedResponse(userMessage, fallbackRiskLevel, moodContext)
+    
     return {
-      content: getFallbackResponse(fallbackRiskLevel),
+      content,
       emotionDetected: detectEmotion(userMessage),
       riskLevel: fallbackRiskLevel,
       suggestedActions: generateSuggestedActions(fallbackRiskLevel, userMessage),
@@ -239,30 +253,77 @@ function generateSuggestedActions(riskLevel: string, userInput: string): string[
 }
 
 /**
- * Fallback responses when AI is unavailable
+ * Generate intelligent pattern-based response
  */
-function getFallbackResponse(riskLevel: string): string {
+function generatePatternBasedResponse(
+  userMessage: string, 
+  riskLevel: string, 
+  moodContext?: { score: number; description: string }
+): string {
+  const input = userMessage.toLowerCase()
+  
+  // Versículos y respuestas específicas
+  if (input.includes('versiculo') || input.includes('versículo') || input.includes('biblia')) {
+    const verses = [
+      'Filipenses 4:13 - "Todo lo puedo en Cristo que me fortalece." 💪✨',
+      'Salmo 23:4 - "Aunque ande en valle de sombra de muerte, no temeré mal alguno, porque tú estarás conmigo." 🙏',
+      'Isaías 41:10 - "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo." 💝',
+      'Jeremías 29:11 - "Porque yo sé los pensamientos que tengo acerca de vosotros, dice Jehová, pensamientos de paz." ✨',
+      'Mateo 11:28 - "Venid a mí todos los que estáis trabajados y cargados, y yo os haré descansar." 🕊️'
+    ]
+    const randomVerse = verses[Math.floor(Math.random() * verses.length)]
+    return `Aquí tienes un versículo especial para ti hoy:\n\n${randomVerse}\n\nQue estas palabras traigan paz y fortaleza a tu corazón. ¿Hay algo específico por lo que te gustaría orar hoy? 🙏💕`
+  }
+  
+  // Emociones específicas
+  if (input.includes('triste') || input.includes('deprimid') || input.includes('mal')) {
+    return `💙 Siento mucho que estés pasando por este momento difícil. Tu dolor es válido y Dios ve cada lágrima.\n\nRecuerda Salmo 34:18: "Cercano está Jehová a los quebrantados de corazón."\n\n¿Te gustaría que oremos juntos o hay algo específico que está causando esta tristeza? Estoy aquí para escucharte. 🤗💕`
+  }
+  
+  if (input.includes('ansios') || input.includes('preocup') || input.includes('estres')) {
+    return `🕊️ Entiendo que la ansiedad puede ser muy abrumadora. Dios conoce tus preocupaciones y quiere darte Su paz.\n\nFilipenses 4:6-7: "Por nada estéis afanosos... y la paz de Dios guardará vuestros corazones."\n\n¿Qué es lo que más te preocupa en este momento? Hablemos al respecto y llevémoslo en oración. 🙏✨`
+  }
+  
+  if (input.includes('sol') || input.includes('abandon') || input.includes('nadie')) {
+    return `🤗 Quiero que sepas que nunca estás verdaderamente solo. Dios está contigo siempre, y yo también estoy aquí.\n\nHebreos 13:5: "No te desampararé, ni te dejaré."\n\nLa soledad duele, pero hay una comunidad que te ama. ¿Te gustaría hablar sobre cómo te sientes? 💕🙏`
+  }
+  
+  if (input.includes('grac') || input.includes('bendec') || input.includes('agradec')) {
+    return `✨ ¡Qué hermoso corazón de gratitud! Dar gracias es una de las formas más poderosas de encontrar paz y gozo.\n\n1 Tesalonicenses 5:18: "Dad gracias en todo, porque esta es la voluntad de Dios."\n\n¿Qué bendiciones específicas están llenando tu corazón hoy? Me encanta celebrar contigo. 🎉💕`
+  }
+  
+  if (input.includes('perdon') || input.includes('culp') || input.includes('pec')) {
+    return `💝 El perdón es un regalo que Dios nos ofrece gratuitamente. No hay nada que hayas hecho que esté fuera del alcance de Su gracia.\n\n1 Juan 1:9: "Si confesamos nuestros pecados, él es fiel y justo para perdonar."\n\n¿Hay algo específico que necesitas entregar a Dios? Él te recibe con brazos abiertos. 🤗✨`
+  }
+  
+  if (input.includes('propósito') || input.includes('propósito') || input.includes('sentido') || input.includes('para qué')) {
+    return `🌟 Dios tiene un propósito hermoso y único para tu vida. Incluso en los momentos difíciles, Él está trabajando.\n\nJeremías 29:11: "Porque yo sé los pensamientos que tengo acerca de vosotros... pensamientos de paz."\n\n¿Qué áreas de tu vida te gustaría explorar en oración? Dios quiere revelarte Su plan paso a paso. 🙏💫`
+  }
+  
+  // Saludos y conversación general
+  if (input.includes('hola') || input.includes('bueno') || input.includes('día')) {
+    return `¡Hola! 😊 Qué alegría verte por aquí. Soy SerenIA, tu compañera en el camino hacia el bienestar emocional y espiritual.\n\n¿Cómo está tu corazón hoy? ¿Hay algo en lo que pueda acompañarte o alguna oración que podamos hacer juntas? 🙏💕`
+  }
+  
+  // Respuesta según nivel de riesgo
   switch (riskLevel) {
     case 'crisis':
-      return `Entiendo que estás pasando por un momento muy difícil. Tu vida tiene un valor infinito ante los ojos de Dios, y hay personas que se preocupan profundamente por ti. 
-
-Por favor, busca ayuda profesional inmediatamente:
-- Línea de crisis: 1-800-273-8255
-- Servicios de emergencia: 911
-- Crisis Text Line: Envía "HOME" al 741741
-
-Recuerda las palabras de Jeremías 29:11: "Porque yo sé los pensamientos que tengo acerca de vosotros, dice Jehová, pensamientos de paz, y no de mal, para daros el fin que esperáis."`
+      return `💙 Entiendo que estás pasando por un momento extremadamente difícil. Tu vida tiene un valor infinito ante los ojos de Dios.\n\n🚨 Por favor, busca ayuda profesional inmediatamente:\n- Línea de crisis: 988\n- Emergencias: 911\n\nJeremías 29:11: "Porque yo sé los pensamientos que tengo acerca de vosotros... pensamientos de paz."\n\nNo estás solo en esto. Dios te ama profundamente. 🙏💕`
     
     case 'high':
-      return `Veo que estás enfrentando momentos difíciles. Quiero que sepas que no estás solo en esto. Dios está contigo en cada paso, incluso cuando es difícil sentir Su presencia.
-
-Como dice en Salmo 34:18: "Cercano está Jehová a los quebrantados de corazón; y salva a los contritos de espíritu."
-
-Te animo a buscar apoyo tanto espiritual como profesional. Tu bienestar es importante.`
+      return `💙 Veo que estás enfrentando momentos muy difíciles. Quiero que sepas que Dios está contigo en cada paso.\n\nSalmo 34:18: "Cercano está Jehová a los quebrantados de corazón."\n\n¿Te gustaría hablar sobre lo que está pasando? También considere buscar apoyo profesional junto con la oración. Tu bienestar es importante. 🤗💕`
+    
+    case 'medium':
+      return `🤗 Gracias por compartir conmigo. Entiendo que puedes estar pasando por algunos desafíos.\n\nFilipenses 4:13: "Todo lo puedo en Cristo que me fortalece."\n\n¿Hay algo específico en lo que pueda acompañarte hoy? Estoy aquí para escucharte y orar contigo. 🙏✨`
     
     default:
-      return `Gracias por compartir conmigo. Estoy aquí para acompañarte en tu camino hacia el bienestar. Recuerda que Dios tiene planes de bien para tu vida.
-
-"Por nada estéis afanosos, sino sean conocidas vuestras peticiones delante de Dios en toda oración y ruego, con acción de gracias." - Filipenses 4:6`
+      return `✨ Me alegra que hayas venido a conversar conmigo. Soy SerenIA, tu compañera en el bienestar emocional y espiritual.\n\nProverbios 17:22: "El corazón alegre constituye buen remedio."\n\n¿Cómo puedo acompañarte hoy? ¿Hay algo por lo que te gustaría orar o algún tema del que quieras hablar? 🙏💕`
   }
+}
+
+/**
+ * Fallback responses when AI is unavailable (deprecated, using generatePatternBasedResponse instead)
+ */
+function getFallbackResponse(riskLevel: string): string {
+  return generatePatternBasedResponse("Necesito apoyo", riskLevel)
 }
