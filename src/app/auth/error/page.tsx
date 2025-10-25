@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Heart, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Suspense } from 'react'
 
 const errorMessages = {
   Configuration: 'Error de configuración del servidor. Contacta al administrador.',
@@ -20,7 +21,7 @@ const errorMessages = {
   SessionRequired: 'Debes iniciar sesión para acceder a esta página.'
 }
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error') as keyof typeof errorMessages
   
@@ -161,5 +162,13 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

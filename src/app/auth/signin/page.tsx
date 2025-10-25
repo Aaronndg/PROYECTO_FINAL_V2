@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Heart, Mail, Lock, User, Eye, EyeOff, ArrowRight, Key } from 'lucide-react'
 
-export default function SignInPage() {
+function SignInForm() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -333,5 +333,13 @@ export default function SignInPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <SignInForm />
+    </Suspense>
   )
 }
