@@ -8,6 +8,22 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'demo-service-key'
 
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production'
+const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL 
+  ? `https://${process.env.VERCEL_URL}` 
+  : 'http://localhost:3000'
+
+// Ensure we have a secret (critical for NextAuth)
+const authSecret = process.env.NEXTAUTH_SECRET || 'fallback-development-secret-for-demo-mode-only'
+
+console.log('Auth Config:', {
+  isProduction,
+  baseUrl,
+  hasSecret: !!process.env.NEXTAUTH_SECRET,
+  hasVercelUrl: !!process.env.VERCEL_URL
+})
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export const authOptions: NextAuthOptions = {
@@ -60,7 +76,9 @@ export const authOptions: NextAuthOptions = {
             mode, 
             hasPassword: !!password,
             environment: process.env.NODE_ENV,
-            hasSecret: !!process.env.NEXTAUTH_SECRET 
+            hasSecret: !!process.env.NEXTAUTH_SECRET,
+            isVercel: !!process.env.VERCEL,
+            vercelUrl: process.env.VERCEL_URL
           })
           const demoUser = demoUsers.find(user => 
             user.email.toLowerCase() === email.toLowerCase()
@@ -68,7 +86,7 @@ export const authOptions: NextAuthOptions = {
           console.log('Auth: Found demo user:', !!demoUser)
           
           if (demoUser && password === demoUser.password) {
-            console.log('Demo user authentication successful')
+            console.log('Auth: Demo user authentication successful for:', demoUser.email)
             return {
               id: demoUser.id,
               email: demoUser.email,
@@ -230,5 +248,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt'
   },
-  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development'
+  secret: authSecret
 }
