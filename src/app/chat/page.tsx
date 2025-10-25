@@ -203,53 +203,73 @@ export default function ChatPage() {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentInput = input
     setInput('')
     setIsLoading(true)
 
     try {
-      // Simular respuesta de IA
-      setTimeout(() => {
-        const aiMessage: Message = {
-          id: `msg-${Date.now() + 1}`,
-          role: 'assistant',
-          content: generateContextualResponse(input),
-          timestamp: new Date().toISOString(),
-          conversation_id: currentConversation || '',
-          metadata: {
-            type: 'text'
-          }
+      console.log('🔥 Sending message to API:', currentInput)
+      
+      // Llamar al API real
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          conversationHistory: messages.slice(-5), // Últimos 5 mensajes para contexto
+          userId: session?.user?.email || 'demo-user'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const aiResponseData = await response.json()
+      console.log('✅ Received AI response:', aiResponseData)
+
+      const aiMessage: Message = {
+        id: `msg-${Date.now() + 1}`,
+        role: 'assistant',
+        content: aiResponseData.content || 'Lo siento, no pude procesar tu mensaje en este momento.',
+        timestamp: new Date().toISOString(),
+        conversation_id: currentConversation || '',
+        metadata: {
+          type: 'text',
+          emotion_detected: aiResponseData.emotionDetected
         }
-        
-        setMessages(prev => [...prev, aiMessage])
-        setIsLoading(false)
-      }, 1500)
+      }
+      
+      setMessages(prev => [...prev, aiMessage])
+      setIsLoading(false)
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('❌ Error sending message:', error)
+      
+      // Fallback response in case of error
+      const fallbackMessage: Message = {
+        id: `msg-${Date.now() + 1}`,
+        role: 'assistant',
+        content: 'Lo siento, estoy teniendo dificultades técnicas en este momento. ¿Podrías intentar de nuevo? Si necesitas ayuda inmediata, recuerda que Dios está siempre contigo. 🙏💕',
+        timestamp: new Date().toISOString(),
+        conversation_id: currentConversation || '',
+        metadata: {
+          type: 'text'
+        }
+      }
+      
+      setMessages(prev => [...prev, fallbackMessage])
       setIsLoading(false)
     }
   }
 
-  const generateContextualResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase()
-    
-    if (input.includes('ansio') || input.includes('preocup') || input.includes('estrés')) {
-      return 'Entiendo que te sientes ansioso. Recuerda que Dios conoce tus luchas y quiere darte paz. Te recomiendo tomar unos momentos para orar y recordar que "Todo lo puedo en Cristo que me fortalece" (Filipenses 4:13). ¿Te gustaría que oremos juntos o prefieres que te comparta algunas técnicas de respiración?'
-    }
-    
-    if (input.includes('triste') || input.includes('deprim') || input.includes('solo')) {
-      return 'Lamento escuchar que te sientes así. Quiero que sepas que no estás solo - Dios está contigo siempre. Como dice el Salmo 34:18: "Cercano está Jehová a los quebrantados de corazón; y salva a los contritos de espíritu." ¿Hay algo específico que está causando estos sentimientos que te gustaría compartir?'
-    }
-    
-    if (input.includes('oración') || input.includes('rezar') || input.includes('orar')) {
-      return 'La oración es una herramienta poderosa para conectarnos con Dios. Te sugiero encontrar un lugar tranquilo, comenzar dando gracias por las bendiciones en tu vida, luego comparte honestamente tus sentimientos y necesidades con Él. Recuerda que no necesitas palabras perfectas - Dios entiende tu corazón. ¿Te gustaría que te guíe en una oración específica?'
-    }
-    
-    if (input.includes('biblia') || input.includes('escritura') || input.includes('versículo')) {
-      return 'La Palabra de Dios es una fuente increíble de sabiduría y consuelo. Para tu situación actual, te recomiendo meditar en Salmo 23 o Isaías 41:10. También tenemos una sección de versículos diarios personalizados que podrían ayudarte. ¿Te gustaría que exploremos algunos versículos específicos para tu situación?'
-    }
-    
-    // Respuesta general empática
-    return 'Gracias por compartir eso conmigo. Es importante que sepas que tus sentimientos son válidos y que Dios se preocupa profundamente por ti. Cada paso en tu jornada es significativo, y estoy aquí para acompañarte. ¿Hay algo específico en lo que te gustaría que te ayude hoy?'
+  const handleSuggestionClick = async (suggestionText: string) => {
+    setInput(suggestionText)
+    // Auto-send the message
+    setTimeout(() => {
+      sendMessage()
+    }, 100)
   }
 
   const formatTime = (timestamp: string): string => {
@@ -417,25 +437,25 @@ export default function ChatPage() {
                   </p>
                   <div className="grid md:grid-cols-2 gap-3 max-w-lg mx-auto">
                     <button
-                      onClick={() => setInput('Me siento ansioso últimamente...')}
+                      onClick={() => handleSuggestionClick('Me siento ansioso últimamente...')}
                       className="p-3 bg-serenia-50 rounded-lg text-sm text-serenia-700 hover:bg-serenia-100 transition-colors"
                     >
                       💙 Hablar sobre ansiedad
                     </button>
                     <button
-                      onClick={() => setInput('¿Puedes ayudarme con una oración?')}
+                      onClick={() => handleSuggestionClick('¿Puedes ayudarme con una oración?')}
                       className="p-3 bg-serenia-50 rounded-lg text-sm text-serenia-700 hover:bg-serenia-100 transition-colors"
                     >
                       🙏 Pedir una oración
                     </button>
                     <button
-                      onClick={() => setInput('¿Qué versículo me recomiendas hoy?')}
+                      onClick={() => handleSuggestionClick('¿Qué versículo me recomiendas hoy?')}
                       className="p-3 bg-serenia-50 rounded-lg text-sm text-serenia-700 hover:bg-serenia-100 transition-colors"
                     >
                       📖 Buscar un versículo
                     </button>
                     <button
-                      onClick={() => setInput('Quiero crecer espiritualmente')}
+                      onClick={() => handleSuggestionClick('Quiero crecer espiritualmente')}
                       className="p-3 bg-serenia-50 rounded-lg text-sm text-serenia-700 hover:bg-serenia-100 transition-colors"
                     >
                       ✨ Crecimiento espiritual
