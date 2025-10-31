@@ -1,5 +1,12 @@
 import OpenAI from 'openai'
 import { SearchResult } from './rag-service'
+import { 
+  detectCrisisKeywords, 
+  processCrisisAlert, 
+  shouldTriggerCrisisAlert, 
+  getCrisisResponseMessage,
+  type AlertResponse 
+} from './crisis-alert-service'
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -12,6 +19,7 @@ export interface AIResponseData {
   riskLevel: 'low' | 'medium' | 'high' | 'crisis'
   suggestedActions?: string[]
   relevantResources?: SearchResult[]
+  crisisAlert?: AlertResponse
 }
 
 /**
@@ -101,16 +109,40 @@ export async function generateEmpatheticResponse(
   userMessage: string,
   moodContext?: { score: number; description: string },
   relevantResources?: SearchResult[],
-  conversationHistory?: Array<{ role: string; content: string }>
+  conversationHistory?: Array<{ role: string; content: string }>,
+  userId?: string
 ): Promise<AIResponseData> {
   try {
     console.log('🤖 AI Service - Processing message:', userMessage)
-    const riskLevel = analyzeRiskLevel(userMessage)
-    console.log('📊 Risk level detected:', riskLevel)
+    
+    // 🚨 CRISIS DETECTION - Priority #1
+    const crisisDetection = detectCrisisKeywords(userMessage)
+    const riskLevel = crisisDetection.riskLevel
+    console.log('📊 Risk level detected:', riskLevel, 'Trigger words:', crisisDetection.triggerWords)
+    
+    let crisisAlert: AlertResponse | undefined = undefined
+    
+    // Process crisis alert if high risk or crisis detected
+    if (shouldTriggerCrisisAlert(riskLevel) && userId) {
+      console.log('� TRIGGERING CRISIS ALERT for user:', userId)
+      try {
+        crisisAlert = await processCrisisAlert(
+          userId,
+          userMessage,
+          riskLevel as 'high' | 'crisis',
+          crisisDetection.triggerWords
+        )
+        console.log('✅ Crisis alert processed:', crisisAlert.alertId)
+      } catch (error) {
+        console.error('❌ Error processing crisis alert:', error)
+      }
+    }
     
     // Check if we have OpenAI API key
     const hasOpenAI = !!process.env.OPENAI_API_KEY
     console.log('🔑 OpenAI API available:', hasOpenAI)
+    
+    let aiContent = ''
     
     if (hasOpenAI) {
       try {
@@ -134,48 +166,69 @@ export async function generateEmpatheticResponse(
           max_tokens: 500,
         })
         
-        const content = response.choices[0]?.message?.content || ''
-        console.log('✅ OpenAI response received:', content.substring(0, 100) + '...')
+        aiContent = response.choices[0]?.message?.content || ''
+        console.log('✅ OpenAI response received:', aiContent.substring(0, 100) + '...')
         
-        if (content) {
-          return {
-            content,
-            emotionDetected: detectEmotion(userMessage),
-            riskLevel,
-            suggestedActions: generateSuggestedActions(riskLevel, userMessage),
-            relevantResources,
-          }
-        }
       } catch (openaiError) {
         console.error('❌ OpenAI API Error:', openaiError)
       }
     }
     
-    // Fallback to pattern-based response (demo mode)
-    console.log('🎯 Using pattern-based AI response (demo mode)')
-    const content = generatePatternBasedResponse(userMessage, riskLevel, moodContext)
-    console.log('✅ Pattern-based response generated:', content.substring(0, 100) + '...')
+    // If no AI content from OpenAI, use pattern-based response
+    if (!aiContent) {
+      console.log('🎯 Using pattern-based AI response')
+      aiContent = generatePatternBasedResponse(userMessage, riskLevel, moodContext)
+      console.log('✅ Pattern-based response generated:', aiContent.substring(0, 100) + '...')
+    }
+    
+    // 🚨 Override AI content with crisis message if crisis detected
+    if (crisisAlert?.alertTriggered) {
+      const crisisMessage = getCrisisResponseMessage(riskLevel as 'high' | 'crisis')
+      aiContent = crisisMessage + '\n\n---\n\n' + aiContent
+      console.log('🚨 Crisis message prepended to AI response')
+    }
     
     return {
-      content,
+      content: aiContent,
       emotionDetected: detectEmotion(userMessage),
       riskLevel,
       suggestedActions: generateSuggestedActions(riskLevel, userMessage),
       relevantResources,
+      crisisAlert
     }
+    
   } catch (error) {
     console.error('❌ Error generating AI response:', error)
     
     // Always fallback to pattern-based response
-    const fallbackRiskLevel = analyzeRiskLevel(userMessage)
+    const fallbackDetection = detectCrisisKeywords(userMessage)
+    const fallbackRiskLevel = fallbackDetection.riskLevel
     const content = generatePatternBasedResponse(userMessage, fallbackRiskLevel, moodContext)
     
+    // Still try to process crisis alert even on error
+    let crisisAlert: AlertResponse | undefined = undefined
+    if (shouldTriggerCrisisAlert(fallbackRiskLevel) && userId) {
+      try {
+        crisisAlert = await processCrisisAlert(
+          userId,
+          userMessage,
+          fallbackRiskLevel as 'high' | 'crisis',
+          fallbackDetection.triggerWords
+        )
+      } catch (crisisError) {
+        console.error('❌ Error processing crisis alert in fallback:', crisisError)
+      }
+    }
+    
     return {
-      content,
+      content: crisisAlert?.alertTriggered ? 
+        getCrisisResponseMessage(fallbackRiskLevel as 'high' | 'crisis') + '\n\n---\n\n' + content : 
+        content,
       emotionDetected: detectEmotion(userMessage),
       riskLevel: fallbackRiskLevel,
       suggestedActions: generateSuggestedActions(fallbackRiskLevel, userMessage),
       relevantResources,
+      crisisAlert
     }
   }
 }

@@ -31,10 +31,12 @@ interface Message {
   timestamp: string
   conversation_id: string
   metadata?: {
-    type?: 'text' | 'suggestion' | 'scripture' | 'prayer'
+    type?: 'text' | 'suggestion' | 'scripture' | 'prayer' | 'crisis'
     related_test?: string
     scripture_reference?: string
     emotion_detected?: string
+    risk_level?: string
+    crisis_alert?: any
   }
 }
 
@@ -237,12 +239,21 @@ export default function ChatPage() {
         timestamp: new Date().toISOString(),
         conversation_id: currentConversation || '',
         metadata: {
-          type: 'text',
-          emotion_detected: aiResponseData.emotionDetected
+          type: aiResponseData.crisisAlert?.alertTriggered ? 'crisis' : 'text',
+          emotion_detected: aiResponseData.emotionDetected,
+          risk_level: aiResponseData.riskLevel,
+          crisis_alert: aiResponseData.crisisAlert
         }
       }
       
       setMessages(prev => [...prev, aiMessage])
+      
+      // Show crisis alert notification if triggered
+      if (aiResponseData.crisisAlert?.alertTriggered) {
+        console.log('🚨 Crisis alert triggered:', aiResponseData.crisisAlert.alertId)
+        // You could show a modal or special notification here
+      }
+      
       setIsLoading(false)
     } catch (error) {
       console.error('❌ Error sending message:', error)
@@ -307,10 +318,26 @@ export default function ChatPage() {
 
   const getMessageIcon = (metadata?: Message['metadata']) => {
     switch (metadata?.type) {
+      case 'crisis': return Bot // Keep Bot icon but we'll style it differently
       case 'scripture': return BookOpen
       case 'prayer': return Heart
       case 'suggestion': return Sparkles
       default: return Bot
+    }
+  }
+
+  const getMessageStyles = (metadata?: Message['metadata']) => {
+    if (metadata?.type === 'crisis') {
+      return {
+        containerClass: 'bg-red-50 border border-red-200',
+        textClass: 'text-red-900',
+        iconClass: 'text-red-600 bg-red-100'
+      }
+    }
+    return {
+      containerClass: 'bg-serenity-100',
+      textClass: 'text-serenity-800',
+      iconClass: 'text-serenity-600 bg-serenity-100'
     }
   }
 
@@ -465,6 +492,7 @@ export default function ChatPage() {
               ) : (
                 messages.map((message) => {
                   const MessageIcon = message.role === 'assistant' ? getMessageIcon(message.metadata) : User
+                  const messageStyles = message.role === 'assistant' ? getMessageStyles(message.metadata) : null
                   
                   return (
                     <div
@@ -475,7 +503,7 @@ export default function ChatPage() {
                         <div className={`p-2 rounded-full ${
                           message.role === 'user' 
                             ? 'bg-serenia-100 ml-3' 
-                            : 'bg-serenity-100 mr-3'
+                            : messageStyles?.iconClass || 'bg-serenity-100 mr-3'
                         }`}>
                           <MessageIcon className={`w-5 h-5 ${
                             message.role === 'user' ? 'text-serenia-600' : 'text-serenity-600'
@@ -484,14 +512,21 @@ export default function ChatPage() {
                         <div className={`rounded-lg p-4 ${
                           message.role === 'user'
                             ? 'bg-serenia-600 text-white'
-                            : 'bg-serenity-100 text-serenity-800'
+                            : messageStyles?.containerClass || 'bg-serenity-100 text-serenity-800'
                         }`}>
                           {message.metadata?.scripture_reference && (
                             <div className="text-xs opacity-75 mb-2">
                               📖 {message.metadata.scripture_reference}
                             </div>
                           )}
-                          <p className="whitespace-pre-line">{message.content}</p>
+                          {message.metadata?.type === 'crisis' && (
+                            <div className="text-xs font-semibold mb-2 text-red-600">
+                              🚨 ALERTA DE BIENESTAR ACTIVADA
+                            </div>
+                          )}
+                          <p className={`whitespace-pre-line ${messageStyles?.textClass || ''}`}>
+                            {message.content}
+                          </p>
                           <div className={`text-xs mt-2 ${
                             message.role === 'user' ? 'text-serenia-200' : 'text-serenity-500'
                           }`}>

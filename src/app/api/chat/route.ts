@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
       message,
       undefined, // moodContext
       [], // relevantResources
-      conversationHistory || []
+      conversationHistory || [],
+      user_id // Pass userId for crisis detection
     )
 
     console.log('✅ Chat API: AI response generated successfully')
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
       emotionDetected: aiResponse.emotionDetected,
       riskLevel: aiResponse.riskLevel,
       suggestedActions: aiResponse.suggestedActions,
+      crisisAlert: aiResponse.crisisAlert,
       timestamp: new Date().toISOString()
     }
 
