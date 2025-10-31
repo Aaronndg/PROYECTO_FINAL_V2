@@ -1,218 +1,226 @@
 import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Heart, MessageCircle, BarChart3, BookOpen, TestTube, Users, ArrowRight } from 'lucide-react'
+import { Heart, MessageCircle, BarChart3, BookOpen, TestTube, Users, ArrowRight, Sparkles, Play } from 'lucide-react'
+import { WelcomeGuide, QuickTips } from '@/components/WelcomeGuide'
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-serenia-50 to-serenity-100">
+      {/* Guías para nuevos usuarios */}
+      <WelcomeGuide />
+      <QuickTips />
+      
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="text-center mb-12">
+        {/* Hero Section */}
+        <section className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <Heart className="w-16 h-16 text-serenia-500 mr-4" />
-            <h1 className="text-5xl font-bold text-serenia-800">
-              SerenIA
-            </h1>
+            <div className="relative">
+              <Heart className="w-20 h-20 text-serenia-500" />
+              <Sparkles className="w-6 h-6 text-serenia-400 absolute -top-2 -right-2" />
+            </div>
           </div>
-          <p className="text-xl text-serenity-600 max-w-3xl mx-auto mb-8">
-            Tu asistente emocional y de bienestar, guiado por principios cristianos.
-            Encuentra paz, crecimiento personal y comunidad en un solo lugar.
+          <h1 className="text-6xl font-bold text-serenia-800 mb-4">
+            SerenIA
+          </h1>
+          <p className="text-2xl text-serenity-600 mb-2">
+            Tu Asistente de Bienestar Emocional
+          </p>
+          <p className="text-lg text-serenity-500 max-w-2xl mx-auto mb-8">
+            Encuentra paz interior, crecimiento personal y apoyo espiritual 
+            con la ayuda de inteligencia artificial y principios cristianos
           </p>
           
           {!session ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link 
                   href="/auth/signin"
-                  className="bg-serenia-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-serenia-700 transition-colors flex items-center justify-center"
+                  className="bg-serenia-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-serenia-700 transition-all hover:scale-105 flex items-center justify-center shadow-lg"
                 >
-                  Comenzar mi viaje
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <Play className="w-5 h-5 mr-2" />
+                  Comenzar Ahora
                 </Link>
                 <Link 
                   href="/demo"
-                  className="border-2 border-serenia-600 text-serenia-600 px-8 py-3 rounded-lg font-semibold hover:bg-serenia-50 transition-colors"
+                  className="border-2 border-serenia-600 text-serenia-600 px-8 py-4 rounded-xl font-semibold hover:bg-serenia-50 transition-all flex items-center justify-center"
                 >
-                  Probar sin registro
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Probar Chat Demo
                 </Link>
               </div>
-              <div className="text-center">
+              
+              {/* Demo Credentials Card */}
+              <div className="bg-white/80 backdrop-blur rounded-xl p-6 max-w-md mx-auto border border-serenia-200 shadow-lg">
+                <h3 className="font-semibold text-serenity-800 mb-3">🔑 Acceso Demo Rápido</h3>
+                <div className="text-sm space-y-2">
+                  <div className="flex justify-between items-center p-2 bg-serenia-50 rounded">
+                    <span className="text-serenity-600">Usuario:</span>
+                    <code className="text-serenia-700">maria@demo.com</code>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-serenia-50 rounded">
+                    <span className="text-serenity-600">Contraseña:</span>
+                    <code className="text-serenia-700">demo123</code>
+                  </div>
+                </div>
                 <Link 
-                  href="/credentials"
-                  className="text-sm text-serenia-600 hover:text-serenia-700 underline"
+                  href="/auth/signin"
+                  className="text-xs text-serenia-600 hover:text-serenia-700 underline mt-2 block text-center"
                 >
-                  Ver credenciales demo para prueba completa
+                  Usar credenciales demo →
                 </Link>
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-lg p-6 shadow-lg max-w-md mx-auto">
-              <p className="text-serenity-700 mb-4">
-                ¡Bienvenido de vuelta, {session.user?.name}!
-              </p>
-              <Link 
-                href="/dashboard"
-                className="bg-serenia-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-serenia-700 transition-colors inline-flex items-center"
-              >
-                Ir a mi dashboard
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+            <div className="bg-white/90 backdrop-blur rounded-xl p-8 shadow-xl max-w-md mx-auto border border-serenia-200">
+              <div className="text-4xl mb-4">👋</div>
+              <h2 className="text-xl font-semibold text-serenity-800 mb-2">
+                ¡Hola, {session.user?.name?.split(' ')[0] || 'Hermano/a'}!
+              </h2>
+              <p className="text-serenity-600 mb-6">¿Cómo te sientes hoy?</p>
+              <div className="space-y-3">
+                <Link 
+                  href="/dashboard"
+                  className="w-full bg-serenia-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-serenia-700 transition-colors flex items-center justify-center"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Ver Mi Progreso
+                </Link>
+                <Link 
+                  href="/chat"
+                  className="w-full border-2 border-serenia-600 text-serenia-600 px-6 py-3 rounded-lg font-semibold hover:bg-serenia-50 transition-colors flex items-center justify-center"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Conversar con SerenIA
+                </Link>
+              </div>
             </div>
           )}
-        </header>
+        </section>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {/* Mood Tracking */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <Heart className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Seguimiento Emocional
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Registra tu estado de ánimo diario y observa patrones que te ayuden a crecer emocionalmente.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Análisis de tendencias con IA</li>
-              <li>• Insights personalizados</li>
-              <li>• Recordatorios diarios</li>
-            </ul>
-          </div>
-
-          {/* AI Chat */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <MessageCircle className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Chat con IA Empática
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Conversa con SerenIA, tu asistente de IA entrenado en principios cristianos de bienestar.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Respuestas contextuales</li>
-              <li>• Detección de riesgo</li>
-              <li>• Recursos bíblicos</li>
-            </ul>
-          </div>
-
-          {/* Scripture */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <BookOpen className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Versículos Diarios
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Recibe versículos bíblicos personalizados según tu estado emocional y necesidades.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Versículo del día</li>
-              <li>• Búsqueda por tema</li>
-              <li>• Favoritos personales</li>
-            </ul>
-          </div>
-
-          {/* Assessments */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <TestTube className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Evaluaciones Espirituales
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Tests psicológicos y espirituales para conocerte mejor y recibir orientación personalizada.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Test de bienestar emocional</li>
-              <li>• Evaluación de fortalezas</li>
-              <li>• Personalidad cristiana</li>
-            </ul>
-          </div>
-
-          {/* Progress Tracking */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <BarChart3 className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Dashboard Personal
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Visualiza tu progreso, establece metas y celebra tus logros en el camino del bienestar.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Métricas de progreso</li>
-              <li>• Metas personalizadas</li>
-              <li>• Reportes semanales</li>
-            </ul>
-          </div>
-
-          {/* Community */}
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <Users className="w-12 h-12 text-serenia-500 mb-4" />
-            <h3 className="text-xl font-semibold text-serenity-800 mb-3">
-              Comunidad de Apoyo
-            </h3>
-            <p className="text-serenity-600 mb-4">
-              Comparte experiencias y encuentra apoyo en una comunidad cristiana de crecimiento mutuo.
-            </p>
-            <ul className="text-sm text-serenity-500 space-y-1">
-              <li>• Testimonios inspiradores</li>
-              <li>• Reflexiones compartidas</li>
-              <li>• Apoyo mutuo</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        {!session && (
-          <div className="bg-gradient-to-r from-serenia-600 to-serenia-700 rounded-xl p-8 text-center text-white mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              Comienza tu viaje hacia el bienestar hoy
-            </h2>
-            <p className="text-xl mb-6 opacity-90">
-              Únete a miles de personas que han encontrado paz y crecimiento con SerenIA
-            </p>
-            <Link 
-              href="/auth/signin"
-              className="bg-white text-serenia-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center"
-            >
-              Registrarse gratis
-              <ArrowRight className="w-5 h-5 ml-2" />
+        {/* Quick Features - Simple Icons */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-serenity-800 mb-12">
+            ¿Cómo te ayudo hoy?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            
+            {/* Chat Feature */}
+            <Link href="/chat" className="group">
+              <div className="bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 group-hover:scale-105 border border-serenia-100">
+                <div className="w-16 h-16 bg-serenia-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-serenia-200 transition-colors">
+                  <MessageCircle className="w-8 h-8 text-serenia-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-serenity-800 mb-3">
+                  Conversar
+                </h3>
+                <p className="text-serenity-600">
+                  Habla con SerenIA sobre tus sentimientos, preocupaciones o necesidades espirituales
+                </p>
+              </div>
             </Link>
-          </div>
-        )}
 
-        {/* Emergency Section */}
-        <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-lg font-medium text-red-800 mb-2">
-                ¿Necesitas ayuda inmediata?
-              </h3>
-              <p className="text-red-700 mb-4">
-                Si estás pasando por una crisis emocional, no estás solo. Busca ayuda profesional:
-              </p>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="font-medium text-red-800">Línea de Crisis</p>
-                  <p className="text-red-600">1-800-273-8255</p>
+            {/* Mood Feature */}
+            <Link href="/mood" className="group">
+              <div className="bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 group-hover:scale-105 border border-serenia-100">
+                <div className="w-16 h-16 bg-serenia-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-serenia-200 transition-colors">
+                  <Heart className="w-8 h-8 text-serenia-600" />
                 </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="font-medium text-red-800">Emergencias</p>
-                  <p className="text-red-600">911</p>
+                <h3 className="text-xl font-semibold text-serenity-800 mb-3">
+                  Mi Estado de Ánimo
+                </h3>
+                <p className="text-serenity-600">
+                  Registra cómo te sientes y observa patrones en tu bienestar emocional
+                </p>
+              </div>
+            </Link>
+
+            {/* Verses Feature */}
+            <Link href="/verses" className="group">
+              <div className="bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 group-hover:scale-105 border border-serenia-100">
+                <div className="w-16 h-16 bg-serenia-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-serenia-200 transition-colors">
+                  <BookOpen className="w-8 h-8 text-serenia-600" />
                 </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="font-medium text-red-800">Crisis Text</p>
-                  <p className="text-red-600">&ldquo;HOME&rdquo; al 741741</p>
+                <h3 className="text-xl font-semibold text-serenity-800 mb-3">
+                  Versículos
+                </h3>
+                <p className="text-serenity-600">
+                  Encuentra versículos bíblicos que hablen a tu corazón y situación actual
+                </p>
+              </div>
+            </Link>
+
+          </div>
+        </section>
+
+        {/* More Features - Collapsed by default */}
+        <section className="mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-semibold text-serenity-800 mb-4">
+              Explora Más Herramientas
+            </h3>
+            <p className="text-serenity-600">
+              Descubre todas las formas en que SerenIA puede acompañarte
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            
+            <Link href="/tests" className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow border border-gray-100">
+              <TestTube className="w-10 h-10 text-serenia-500 mb-3" />
+              <h4 className="font-semibold text-serenity-800 mb-2">Evaluaciones</h4>
+              <p className="text-sm text-serenity-600">Tests de bienestar y crecimiento personal</p>
+            </Link>
+
+            <Link href="/dashboard" className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow border border-gray-100">
+              <BarChart3 className="w-10 h-10 text-serenia-500 mb-3" />
+              <h4 className="font-semibold text-serenity-800 mb-2">Mi Progreso</h4>
+              <p className="text-sm text-serenity-600">Visualiza tu crecimiento y metas</p>
+            </Link>
+
+            <Link href="/community" className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow border border-gray-100">
+              <Users className="w-10 h-10 text-serenia-500 mb-3" />
+              <h4 className="font-semibold text-serenity-800 mb-2">Comunidad</h4>
+              <p className="text-sm text-serenity-600">Comparte y recibe apoyo mutuo</p>
+            </Link>
+
+          </div>
+        </section>
+
+        {/* Emergency Help - Simplified */}
+        <section className="mb-12">
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 rounded-lg p-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-red-800 mb-2">
+                  ¿Necesitas ayuda inmediata?
+                </h3>
+                <p className="text-red-700 mb-3">
+                  Si estás en crisis, no estás solo. Busca ayuda profesional:
+                </p>
+                <div className="flex gap-4 text-sm">
+                  <span className="bg-white px-3 py-1 rounded font-medium text-red-800">
+                    Crisis: 988
+                  </span>
+                  <span className="bg-white px-3 py-1 rounded font-medium text-red-800">
+                    Emergencia: 911
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Footer */}
-        <footer className="mt-16 text-center text-serenity-500">
-          <p>&copy; 2025 SerenIA. Desarrollado con ❤️ para el bienestar de la comunidad cristiana.</p>
+        <footer className="text-center text-serenity-500 pt-8 border-t border-serenity-200">
+          <p>SerenIA &copy; 2025 • Desarrollado con ❤️ para tu bienestar</p>
         </footer>
       </div>
     </main>

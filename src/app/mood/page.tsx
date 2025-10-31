@@ -24,6 +24,7 @@ export default function MoodPage() {
   const [description, setDescription] = useState('')
   const [notes, setNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +48,10 @@ export default function MoodPage() {
       })
 
       if (response.ok) {
-        router.push('/dashboard')
+        setShowSuccess(true)
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
       }
     } catch (error) {
       console.error('Error saving mood:', error)
@@ -61,6 +65,24 @@ export default function MoodPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-serenia-50 to-serenity-100">
       <Navigation />
+      
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 text-center max-w-sm mx-4 shadow-2xl">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold text-serenity-800 mb-2">
+              ¡Registrado!
+            </h3>
+            <p className="text-serenity-600 mb-4">
+              Tu estado de ánimo se ha guardado correctamente.
+            </p>
+            <div className="animate-spin w-6 h-6 border-2 border-serenia-600 border-t-transparent rounded-full mx-auto"></div>
+          </div>
+        </div>
+      )}
       
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <h1 className="text-3xl font-bold text-serenia-800 mb-8">

@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/components/AuthProvider'
+import { AccessibilityPanel } from '@/components/AccessibilityPanel'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           {children}
+          <AccessibilityPanel />
         </AuthProvider>
       </body>
     </html>

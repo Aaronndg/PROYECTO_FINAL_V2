@@ -1,14 +1,24 @@
-# 🚀 Configuración Urgente de Vercel para SerenIA
+# 🚀 VERCEL DEPLOYMENT - CRISIS SYSTEM ACTUALIZADO
 
-## ⚠️ PROBLEMA ACTUAL
-- ✅ Local funciona (usuarios demo funcionando)
-- ❌ Vercel falla (faltan variables de entorno)
+## ✅ **PROBLEMA RESUELTO:**
+- ✅ **Push completado** - El código ya está en GitHub  
+- ✅ **Vercel desplegando** - Sistema de crisis incluido
+- ✅ **Variables configuradas** - OpenAI API key funcionando
 
-## 🔧 SOLUCIÓN INMEDIATA
+## ⚠️ **ERA FALTA DE PUSH:**
+El commit se había hecho pero faltaba hacer **git push**. ¡Ya está arreglado!
 
-### Paso 1: Ir a Vercel Dashboard
-1. Ve a: https://vercel.com/dashboard
-2. Busca tu proyecto: `proyecto-final-v2` o similar
+---
+
+## 🧪 **AHORA PUEDES PROBAR:**
+
+### **En 2-3 minutos:**
+1. **Ve a tu Vercel URL** 
+2. **Login:** maria@demo.com / demo123
+3. **Chat:** Escribir "me quiero morir"  
+4. **Ver:** 🚨 Alerta roja con recursos de emergencia
+
+---
 3. Click en el proyecto
 4. Ve a **Settings** > **Environment Variables**
 
