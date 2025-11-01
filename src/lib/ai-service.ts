@@ -7,6 +7,7 @@ import {
   getCrisisResponseMessage,
   type AlertResponse 
 } from './crisis-alert-service'
+import { emotionalMonitoringService } from './emotional-monitoring'
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -107,13 +108,14 @@ function analyzeRiskLevel(userInput: string): 'low' | 'medium' | 'high' | 'crisi
  */
 export async function generateEmpatheticResponse(
   userMessage: string,
-  moodContext?: { score: number; description: string },
-  relevantResources?: SearchResult[],
+  emotionalAnalysis?: any,
+  personalizedInsights?: any,
   conversationHistory?: Array<{ role: string; content: string }>,
   userId?: string
 ): Promise<AIResponseData> {
   try {
     console.log('🤖 AI Service - Processing message:', userMessage)
+    console.log('🧠 Emotional Analysis provided:', !!emotionalAnalysis)
     
     // 🚨 CRISIS DETECTION - Priority #1
     const crisisDetection = detectCrisisKeywords(userMessage)

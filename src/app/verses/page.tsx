@@ -52,8 +52,13 @@ export default function VersesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [verses, setVerses] = useState<Verse[]>([])
   const [loading, setLoading] = useState(false)
-  const [showChat, setShowChat] = useState(false)
-  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([])
+  const [showChat, setShowChat] = useState(true) // Iniciar con chat automáticamente
+  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([
+    {
+      role: 'assistant',
+      content: '¡Hola! Soy SerenIA, tu asistente espiritual. Cuéntame cómo te sientes o qué situación estás viviendo, y te ayudaré a encontrar versículos bíblicos que hablen a tu corazón. 🙏'
+    }
+  ])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [copiedVerse, setCopiedVerse] = useState<string | null>(null)

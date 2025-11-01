@@ -4,51 +4,346 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Navigation } from '@/components/Navigation'
 import {
-  Users,
-  Plus,
   Heart,
-  MessageCircle,
-  Share2,
-  BookOpen,
-  Search,
-  Filter,
   Star,
-  Eye,
+  BookOpen,
+  Quote,
   Calendar,
-  Tag,
-  MoreVertical,
-  Edit3,
-  Trash2,
-  Flag,
-  Clock,
-  ThumbsUp,
-  Send,
-  X,
-  Check
+  User,
+  Sparkles,
+  RefreshCw,
+  Filter
 } from 'lucide-react'
 
-interface CommunityNote {
+interface Testimony {
   id: string
-  user_id: string
-  author_name: string
-  author_avatar?: string
   title: string
   content: string
-  category: string
-  tags: string[]
-  is_public: boolean
+  author_name: string
+  category: 'healing' | 'growth' | 'faith' | 'gratitude' | 'transformation'
+  bible_verse?: string
+  verse_reference?: string
+  created_at: string
   is_featured: boolean
   likes_count: number
-  comments_count: number
-  views_count: number
-  created_at: string
-  updated_at: string
-  is_liked?: boolean
-  is_author?: boolean
 }
 
-interface Comment {
-  id: string
+export default function CommunityPage() {
+  const { data: session } = useSession()
+  const [testimonies, setTestimonies] = useState<Testimony[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  const categories = [
+    { value: 'all', label: 'Todos', icon: BookOpen, color: 'text-serenia-500' },
+    { value: 'healing', label: 'Sanidad', icon: Heart, color: 'text-green-500' },
+    { value: 'growth', label: 'Crecimiento', icon: Sparkles, color: 'text-blue-500' },
+    { value: 'faith', label: 'Fe', icon: Star, color: 'text-yellow-500' },
+    { value: 'gratitude', label: 'Gratitud', icon: Heart, color: 'text-pink-500' },
+    { value: 'transformation', label: 'Transformación', icon: RefreshCw, color: 'text-purple-500' }
+  ]
+
+  // Testimonios inspiradores predefinidos
+  const inspirationalTestimonies: Testimony[] = [
+    {
+      id: '1',
+      title: 'Encontré paz en medio de la tormenta',
+      content: 'Durante los momentos más difíciles de mi vida, cuando la ansiedad parecía consumirme, encontré refugio en la oración y la palabra de Dios. Cada día que pasaba meditando en Sus promesas, mi corazón encontraba más calma. Ahora puedo decir que la paz que sobrepasa todo entendimiento es real.',
+      author_name: 'María G.',
+      category: 'healing',
+      bible_verse: 'Y la paz de Dios, que sobrepasa todo entendimiento, guardará vuestros corazones y vuestros pensamientos en Cristo Jesús.',
+      verse_reference: 'Filipenses 4:7',
+      created_at: '2024-01-15',
+      is_featured: true,
+      likes_count: 47
+    },
+    {
+      id: '2',
+      title: 'Aprendí a ver las bendiciones en lo pequeño',
+      content: 'Solía quejarme constantemente por lo que me faltaba. Pero al comenzar un diario de gratitud, mis ojos se abrieron a las incontables bendiciones que Dios derrama cada día. Desde el café de la mañana hasta el abrazo de mis hijos, todo es un regalo del cielo.',
+      author_name: 'Carlos R.',
+      category: 'gratitude',
+      bible_verse: 'Dad gracias en todo, porque esta es la voluntad de Dios para con vosotros en Cristo Jesús.',
+      verse_reference: '1 Tesalonicenses 5:18',
+      created_at: '2024-01-10',
+      is_featured: false,
+      likes_count: 32
+    },
+    {
+      id: '3',
+      title: 'Dios me ayudó a perdonar lo imperdonable',
+      content: 'Guardé rencor durante años hasta que entendí que el perdón no es para la otra persona, sino para mi propia libertad. Con la ayuda de Dios y mucha oración, pude liberarme de esa carga. Ahora vivo en paz y mi corazón está sano.',
+      author_name: 'Ana L.',
+      category: 'transformation',
+      bible_verse: 'Antes sed benignos unos con otros, misericordiosos, perdonándoos unos a otros, como Dios también os perdonó a vosotros en Cristo.',
+      verse_reference: 'Efesios 4:32',
+      created_at: '2024-01-08',
+      is_featured: true,
+      likes_count: 58
+    },
+    {
+      id: '4',
+      title: 'Mi fe creció en tiempos de incertidumbre',
+      content: 'Cuando perdí mi trabajo y no sabía qué hacer, decidí confiar completamente en Dios. Ese tiempo de espera se convirtió en el tiempo más hermoso de mi relación con Él. Aprendí que Sus tiempos son perfectos y Sus planes mejores que los míos.',
+      author_name: 'Roberto M.',
+      category: 'faith',
+      bible_verse: 'Porque yo sé los pensamientos que tengo acerca de vosotros, dice Jehová, pensamientos de paz, y no de mal, para daros el fin que esperáis.',
+      verse_reference: 'Jeremías 29:11',
+      created_at: '2024-01-05',
+      is_featured: false,
+      likes_count: 41
+    },
+    {
+      id: '5',
+      title: 'Encontré mi propósito sirviendo a otros',
+      content: 'Después de años sintiéndome vacía, descubrí que mi gozo está en servir a otros. Comenzé ayudando en mi iglesia y ahora lidero un ministerio de apoyo emocional. Dios usa nuestras heridas para sanar a otros.',
+      author_name: 'Patricia S.',
+      category: 'growth',
+      bible_verse: 'Y sabemos que a los que aman a Dios, todas las cosas les ayudan a bien, esto es, a los que conforme a su propósito son llamados.',
+      verse_reference: 'Romanos 8:28',
+      created_at: '2024-01-03',
+      is_featured: true,
+      likes_count: 65
+    },
+    {
+      id: '6',
+      title: 'La oración cambió mi matrimonio',
+      content: 'Mi esposo y yo estábamos al borde del divorcio. En lugar de seguir peleando, decidimos orar juntos cada noche. Dios restauró nuestro amor y ahora tenemos un matrimonio más fuerte que nunca. La oración es poderosa.',
+      author_name: 'Laura y Miguel H.',
+      category: 'healing',
+      bible_verse: 'Por tanto, lo que Dios juntó, no lo separe el hombre.',
+      verse_reference: 'Marcos 10:9',
+      created_at: '2024-01-01',
+      is_featured: false,
+      likes_count: 39
+    }
+  ]
+
+  useEffect(() => {
+    // Simular carga de testimonios
+    const loadTestimonies = () => {
+      setLoading(true)
+      setTimeout(() => {
+        setTestimonies(inspirationalTestimonies)
+        setLoading(false)
+      }, 1000)
+    }
+
+    loadTestimonies()
+  }, [])
+
+  const filteredTestimonies = selectedCategory === 'all' 
+    ? testimonies 
+    : testimonies.filter(t => t.category === selectedCategory)
+
+  const featuredTestimonies = testimonies.filter(t => t.is_featured)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <Navigation />
+        <div className="pt-24 pb-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 rounded-lg w-1/3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-white rounded-xl p-6 space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 rounded"></div>
+                      <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <Navigation />
+      
+      <div className="pt-24 pb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-serenia-500 rounded-full mb-6">
+              <Heart className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Testimonios de Fe
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Historias reales de transformación, sanidad y crecimiento espiritual que inspiran y fortalecen nuestra fe.
+            </p>
+          </div>
+
+          {/* Featured Testimonies */}
+          {featuredTestimonies.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <Star className="w-6 h-6 text-yellow-500 mr-2" />
+                Testimonios Destacados
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {featuredTestimonies.slice(0, 2).map((testimony) => (
+                  <div key={testimony.id} className="bg-white rounded-xl shadow-lg p-8 border-l-4 border-serenia-500">
+                    <div className="flex items-start mb-4">
+                      <Quote className="w-8 h-8 text-serenia-400 mr-3 flex-shrink-0" />
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          {testimony.title}
+                        </h3>
+                        <div className="flex items-center text-sm text-gray-500 mb-4">
+                          <User className="w-4 h-4 mr-1" />
+                          {testimony.author_name}
+                          <Calendar className="w-4 h-4 ml-4 mr-1" />
+                          {new Date(testimony.created_at).toLocaleDateString('es-ES')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-700 leading-relaxed mb-6">
+                      {testimony.content}
+                    </p>
+                    
+                    {testimony.bible_verse && (
+                      <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                        <p className="text-blue-800 italic mb-2">
+                          "{testimony.bible_verse}"
+                        </p>
+                        <p className="text-blue-600 text-sm font-medium">
+                          {testimony.verse_reference}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        testimony.category === 'healing' ? 'bg-green-100 text-green-800' :
+                        testimony.category === 'growth' ? 'bg-blue-100 text-blue-800' :
+                        testimony.category === 'faith' ? 'bg-yellow-100 text-yellow-800' :
+                        testimony.category === 'gratitude' ? 'bg-pink-100 text-pink-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {categories.find(c => c.value === testimony.category)?.label}
+                      </span>
+                      <div className="flex items-center text-gray-500">
+                        <Heart className="w-4 h-4 mr-1" />
+                        <span className="text-sm">{testimony.likes_count}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Category Filter */}
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <Filter className="w-5 h-5 text-gray-500 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-900">Filtrar por categoría</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => {
+                const Icon = category.icon
+                return (
+                  <button
+                    key={category.value}
+                    onClick={() => setSelectedCategory(category.value)}
+                    className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedCategory === category.value
+                        ? 'bg-serenia-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 mr-2 ${selectedCategory === category.value ? 'text-white' : category.color}`} />
+                    {category.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* All Testimonies Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTestimonies.map((testimony) => (
+              <div key={testimony.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                <div className="flex items-start mb-4">
+                  <Quote className="w-6 h-6 text-serenia-400 mr-2 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      {testimony.title}
+                    </h3>
+                    <div className="flex items-center text-xs text-gray-500 mb-3">
+                      <User className="w-3 h-3 mr-1" />
+                      {testimony.author_name}
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                  {testimony.content}
+                </p>
+                
+                {testimony.bible_verse && (
+                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                    <p className="text-blue-800 text-xs italic line-clamp-2">
+                      "{testimony.bible_verse}"
+                    </p>
+                    <p className="text-blue-600 text-xs font-medium mt-1">
+                      {testimony.verse_reference}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    testimony.category === 'healing' ? 'bg-green-100 text-green-800' :
+                    testimony.category === 'growth' ? 'bg-blue-100 text-blue-800' :
+                    testimony.category === 'faith' ? 'bg-yellow-100 text-yellow-800' :
+                    testimony.category === 'gratitude' ? 'bg-pink-100 text-pink-800' :
+                    'bg-purple-100 text-purple-800'
+                  }`}>
+                    {categories.find(c => c.value === testimony.category)?.label}
+                  </span>
+                  <div className="flex items-center text-gray-400">
+                    <Heart className="w-4 h-4 mr-1" />
+                    <span className="text-xs">{testimony.likes_count}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Call to Action */}
+          <div className="mt-12 text-center">
+            <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+              <Sparkles className="w-12 h-12 text-serenia-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Tu historia también puede inspirar
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Si Dios ha obrado en tu vida, tu testimonio puede ser una luz para otros que están pasando por situaciones similares.
+              </p>
+              <p className="text-sm text-gray-500 italic">
+                "Y ellos le han vencido por medio de la sangre del Cordero y de la palabra del testimonio de ellos"
+                <br />
+                <span className="font-medium">Apocalipsis 12:11</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
   note_id: string
   user_id: string
   author_name: string

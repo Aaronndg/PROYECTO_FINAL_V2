@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmpatheticResponse } from '@/lib/ai-service'
+import { emotionalMonitoringService } from '@/lib/emotional-monitoring'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🎯 Chat API: Processing request...')
     
+    const session = await getServerSession(authOptions)
     const body = await request.json()
     const { message, conversationHistory, userId } = body
 
@@ -19,23 +23,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const user_id = userId || 'demo-user'
+    const user_id = session?.user?.id || userId || 'demo-user'
+
+    // Analizar estado emocional del usuario
+    console.log('🧠 Chat API: Analyzing emotional state...')
+    const emotionalAnalysis = await emotionalMonitoringService.analyzeEmotionalState(
+      user_id,
+      message,
+      'chat'
+    )
+
+    // Generar insights personalizados
+    const personalizedInsights = emotionalMonitoringService.generatePersonalizedInsights(user_id)
+
+    console.log(`📊 Emotional Analysis: ${emotionalAnalysis.mood_score}/10 (${emotionalAnalysis.improvement_trend})`)
 
     // Generate AI response with enhanced context
     console.log('🤖 Chat API: Generating AI response...')
     const aiResponse = await generateEmpatheticResponse(
       message,
-      undefined, // moodContext
-      [], // relevantResources
+      emotionalAnalysis, // moodContext
+      personalizedInsights, // relevantResources
       conversationHistory || [],
       user_id // Pass userId for crisis detection
     )
 
     console.log('✅ Chat API: AI response generated successfully')
 
-    // Simple response for now
+    // Enhanced response with emotional intelligence
     const response = {
       content: aiResponse.content,
+      emotional_analysis: {
+        mood_score: emotionalAnalysis.mood_score,
+        trend: emotionalAnalysis.improvement_trend,
+        insights: emotionalAnalysis.ai_insights,
+        is_improving: emotionalAnalysis.improvement_trend === 'improving'
+      },
+      personalized_insights: personalizedInsights,
+      crisis_info: aiResponse.crisis_detected ? {
+        risk_level: aiResponse.risk_level,
+        resources: aiResponse.emergency_resources
+      } : null
       emotionDetected: aiResponse.emotionDetected,
       riskLevel: aiResponse.riskLevel,
       suggestedActions: aiResponse.suggestedActions,

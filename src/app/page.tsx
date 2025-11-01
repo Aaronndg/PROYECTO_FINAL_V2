@@ -1,54 +1,181 @@
 import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Heart, MessageCircle, BarChart3, BookOpen, TestTube, Users, ArrowRight, Sparkles, Play } from 'lucide-react'
-import { WelcomeGuide, QuickTips } from '@/components/WelcomeGuide'
+import { Heart, MessageCircle, BarChart3, BookOpen, TestTube, ArrowRight, Sparkles, Play, Brain, Users } from 'lucide-react'
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-serenia-50 to-serenity-100">
-      {/* Guías para nuevos usuarios */}
-      <WelcomeGuide />
-      <QuickTips />
-      
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <section className="text-center mb-16">
+        <section className="text-center mb-16 pt-16">
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              <Heart className="w-20 h-20 text-serenia-500" />
-              <Sparkles className="w-6 h-6 text-serenia-400 absolute -top-2 -right-2" />
+              <Heart className="w-16 h-16 text-serenia-500" />
+              <Sparkles className="w-4 h-4 text-serenia-400 absolute -top-1 -right-1" />
             </div>
           </div>
-          <h1 className="text-6xl font-bold text-serenia-800 mb-4">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
             SerenIA
           </h1>
-          <p className="text-2xl text-serenity-600 mb-2">
+          <p className="text-xl text-gray-600 mb-2">
             Tu Asistente de Bienestar Emocional
           </p>
-          <p className="text-lg text-serenity-500 max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
             Encuentra paz interior, crecimiento personal y apoyo espiritual 
-            con la ayuda de inteligencia artificial y principios cristianos
+            con inteligencia artificial y principios cristianos de fe
           </p>
           
           {!session ? (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link 
-                  href="/auth/signin"
-                  className="bg-serenia-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-serenia-700 transition-all hover:scale-105 flex items-center justify-center shadow-lg"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Comenzar Ahora
-                </Link>
-                <Link 
-                  href="/demo"
-                  className="border-2 border-serenia-600 text-serenia-600 px-8 py-4 rounded-xl font-semibold hover:bg-serenia-50 transition-all flex items-center justify-center"
-                >
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Probar Chat Demo
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link 
+                href="/auth/signin"
+                className="bg-serenia-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-serenia-700 transition-all hover:scale-105 flex items-center justify-center shadow-lg"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Comenzar Ahora
+              </Link>
+              <Link 
+                href="/demo"
+                className="border-2 border-serenia-600 text-serenia-600 px-8 py-4 rounded-xl font-semibold hover:bg-serenia-50 transition-all flex items-center justify-center"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Probar Demo
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link 
+                href="/dashboard"
+                className="bg-serenia-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-serenia-700 transition-all hover:scale-105 flex items-center justify-center shadow-lg"
+              >
+                <BarChart3 className="w-5 h-5 mr-2" />
+                Mi Dashboard
+              </Link>
+              <Link 
+                href="/chat"
+                className="border-2 border-serenia-600 text-serenia-600 px-8 py-4 rounded-xl font-semibold hover:bg-serenia-50 transition-all flex items-center justify-center"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Hablar con SerenIA
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* Features Section */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            ¿Cómo puede SerenIA ayudarte?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={MessageCircle}
+              title="Chat Inteligente"
+              description="Conversa con una IA empática que comprende tus emociones y ofrece apoyo basado en principios cristianos"
+              href={session ? "/chat" : "/demo"}
+              color="text-blue-500"
+              bgColor="bg-blue-50"
+            />
+            <FeatureCard
+              icon={BarChart3}
+              title="Monitoreo Emocional"
+              description="Seguimiento inteligente de tu bienestar emocional con insights personalizados y recomendaciones"
+              href={session ? "/dashboard" : "/auth/signin"}
+              color="text-green-500"
+              bgColor="bg-green-50"
+            />
+            <FeatureCard
+              icon={BookOpen}
+              title="Versículos Personalizados"
+              description="Recibe versículos bíblicos seleccionados según tu estado emocional y necesidades actuales"
+              href={session ? "/verses" : "/auth/signin"}
+              color="text-purple-500"
+              bgColor="bg-purple-50"
+            />
+            <FeatureCard
+              icon={TestTube}
+              title="Evaluaciones Rápidas"
+              description="Tests psicológicos breves y efectivos para conocer mejor tu estado emocional y espiritual"
+              href={session ? "/tests" : "/demo"}
+              color="text-orange-500"
+              bgColor="bg-orange-50"
+            />
+            <FeatureCard
+              icon={Heart}
+              title="Testimonios Inspiradores"
+              description="Lee historias reales de transformación y crecimiento espiritual que fortalecen tu fe"
+              href="/community"
+              color="text-pink-500"
+              bgColor="bg-pink-50"
+            />
+            <FeatureCard
+              icon={Brain}
+              title="Detección de Crisis"
+              description="Sistema inteligente que detecta momentos críticos y ofrece recursos de ayuda inmediata"
+              href={session ? "/dashboard" : "/auth/signin"}
+              color="text-red-500"
+              bgColor="bg-red-50"
+            />
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        {!session && (
+          <section className="text-center bg-white rounded-2xl shadow-lg p-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              ¿Listo para comenzar tu jornada de bienestar?
+            </h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Únete a miles de personas que han encontrado paz y crecimiento personal 
+              con SerenIA. Es completamente gratuito y confidencial.
+            </p>
+            <Link 
+              href="/auth/signin"
+              className="inline-flex items-center bg-serenia-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-serenia-700 transition-all hover:scale-105 shadow-lg"
+            >
+              Comenzar Gratis
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
+          </section>
+        )}
+      </div>
+    </main>
+  )
+}
+
+interface FeatureCardProps {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  href: string
+  color: string
+  bgColor: string
+}
+
+function FeatureCard({ icon: Icon, title, description, href, color, bgColor }: FeatureCardProps) {
+  return (
+    <Link href={href} className="group block">
+      <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full hover:scale-105">
+        <div className={`${bgColor} rounded-lg p-3 w-fit mb-4`}>
+          <Icon className={`w-6 h-6 ${color}`} />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">
+          {title}
+        </h3>
+        <p className="text-gray-600 leading-relaxed">
+          {description}
+        </p>
+        <div className="flex items-center text-serenia-600 mt-4 group-hover:text-serenia-700">
+          <span className="text-sm font-medium">Explorar</span>
+          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    </Link>
+  )
+}
                 </Link>
               </div>
               
