@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       crisis_info: aiResponse.crisis_detected ? {
         risk_level: aiResponse.risk_level,
         resources: aiResponse.emergency_resources
-      } : null
+      } : null,
       emotionDetected: aiResponse.emotionDetected,
       riskLevel: aiResponse.riskLevel,
       suggestedActions: aiResponse.suggestedActions,

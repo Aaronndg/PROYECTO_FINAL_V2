@@ -56,8 +56,8 @@ export default function TestsPage() {
             </div>
             
             <div className="bg-white rounded-2xl p-8 shadow-xl text-center">
-              <div className={	ext-6xl mb-4 text--500}>
-                {result.level === "Alto" ? "" : result.level === "Medio" ? "" : ""}
+              <div className="text-6xl mb-4">
+                {result.level === "Alto" ? "🟢" : result.level === "Medio" ? "🟡" : "🔴"}
               </div>
               <h2 className="text-3xl font-bold mb-4">
                 Bienestar: {result.level}
@@ -114,7 +114,7 @@ export default function TestsPage() {
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: ${((currentQuestion + 1) / questions.length) * 100}% }}
+                  style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                 ></div>
               </div>
             </div>
