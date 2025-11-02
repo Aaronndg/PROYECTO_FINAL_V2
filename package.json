@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "vercel-build": "next build",
     "db:migrate": "node scripts/migrate-database.js",
-    "db:setup": "npm run db:migrate"
+    "db:setup": "npm run db:migrate",
+    "force-deploy": "echo 'Forcing deployment'"
   },
   "dependencies": {
     "@next-auth/supabase-adapter": "^0.2.1",
